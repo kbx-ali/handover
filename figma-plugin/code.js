@@ -33,8 +33,12 @@ function findPrefixedSections(node, fileKey, pageName) {
           : ''
       });
     }
-    // Always recurse — a // frame may itself contain further // frames,
-    // and Figma Sections may wrap // frames without being named themselves.
+    // Don't recurse into component instances or component definitions —
+    // they are atomic sections; their internal frames are not user-facing
+    // page sections and would pollute results if picked up.
+    if (child.type === 'INSTANCE' || child.type === 'COMPONENT') continue;
+    // Recurse into frames/groups/sections — a // frame may contain further
+    // // frames, and Figma Sections may wrap // frames without being named.
     results.push(...findPrefixedSections(child, fileKey, pageName));
   }
   return results;
