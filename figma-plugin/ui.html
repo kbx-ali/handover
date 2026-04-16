@@ -726,7 +726,7 @@ const FIRESTORE_PROJECT  = 'cro-strategic-roadmap';
 const FIRESTORE_BASE     = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents`;
 const SYNC_POLL_INTERVAL = 60 * 1000; // check every 60 seconds
 const LANDING_URL    = 'https://kubix-design.netlify.app/handover-plugin';
-const PLUGIN_VERSION = 'v1.1.9';
+const PLUGIN_VERSION = 'v1.1.10';
 const VERSION_CACHE_KEY = 'kbx_version_check'; // localStorage — survives sessions
 const VERSION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
 
@@ -1572,17 +1572,39 @@ async function onSignInSuccess(user) {
 }
 
 async function _loadExistingProject() {
-  // Try fileKey first. Only fall back to pluginSyncId when the fileKey hasn't
-  // changed — otherwise a duplicated Figma file (new fileKey, old pluginSyncId
-  // in clientStorage) would incorrectly load the source file's project.
-  const keysToTry = [state.fileKey];
   const fileKeyChanged = state.fileKey && state.priorFileKey && state.fileKey !== state.priorFileKey;
+
+  // 1. shareToken already in clientStorage — fastest path, most reliable link.
+  //    Skip if fileKey changed (different file shouldn't load previous project).
+  if (!fileKeyChanged && state.shareToken) {
+    const ok = await _tryLoadByShareToken(state.shareToken);
+    if (ok) return true;
+    // Token stale/deleted — clear it so we don't keep trying
+    state.shareToken = '';
+    post({ type: 'set-storage', key: 'shareToken', value: '' });
+  }
+
+  // 2. Sync doc lookup — requires web app to have written handover_sync/{key}.
+  //    Try fileKey first, then pluginSyncId (skip pluginSyncId if file changed).
+  const keysToTry = [state.fileKey];
   if (!fileKeyChanged && state.pluginSyncId) keysToTry.push(state.pluginSyncId);
   for (const key of keysToTry.filter(Boolean)) {
     const ok = await _tryLoadBySyncKey(key);
     if (ok) return true;
   }
   return false;
+}
+
+async function _tryLoadByShareToken(shareToken) {
+  try {
+    const projRes = await fetch(`${FIRESTORE_BASE}/handover_public/${shareToken}`);
+    if (!projRes.ok) return false;
+    const projDoc = await projRes.json();
+    if (!projDoc.fields) return false;
+    return _applyProjectDoc(projDoc, shareToken);
+  } catch(e) {
+    return false;
+  }
 }
 
 async function _tryLoadBySyncKey(key) {
@@ -1605,47 +1627,55 @@ async function _tryLoadBySyncKey(key) {
     const projDoc = await projRes.json();
     if (!projDoc.fields) return false;
 
-    const title = projDoc.fields.title?.stringValue || '';
-    const theme = projDoc.fields.theme?.stringValue || '';
-    if (title) {
-      state.projectName  = title;
-      state.projectTheme = theme || '';
-      document.getElementById('project-name').value  = title;
-      document.getElementById('project-theme').value = theme || '';
-      post({ type: 'set-storage', key: 'projectName',  value: title });
-      post({ type: 'set-storage', key: 'projectTheme', value: theme || '' });
-    }
-
-    const pagesMap  = projDoc.fields.pages?.mapValue?.fields || {};
-    const pageData  = pagesMap[state.pageType]?.mapValue?.fields;
-    if (!pageData) { if (title) showToast(`✓ Loaded: ${title}`); return true; }
-
-    const sectionsArr = pageData.sections?.arrayValue?.values || [];
-    const frameByName = {};
-    state.frames.forEach(f => { frameByName[f.name.toLowerCase().trim()] = f; });
-
-    let loaded = 0;
-    sectionsArr.forEach(sVal => {
-      const sf = sVal?.mapValue?.fields;
-      if (!sf) return;
-      const name   = sf.name?.stringValue   || '';
-      const status = sf.status?.stringValue || 'existing';
-      const notes  = sf.notes?.stringValue  || '';
-      const frame  = frameByName[name.toLowerCase().trim()];
-      if (!frame) return;
-      ensureSection(frame.id);
-      state.sections[frame.id].status = status;
-      if (notes) state.sections[frame.id].notes = notes;
-      loaded++;
-    });
-
-    if (loaded > 0) { saveSections(); renderFrames(); }
-    showToast(title ? `✓ Loaded: ${title} (${loaded} section${loaded !== 1 ? 's' : ''})` : `✓ Existing project loaded`);
-    return true;
+    return _applyProjectDoc(projDoc, shareToken);
   } catch(e) {
     console.warn('[LoadExistingProject]', e);
     return false;
   }
+}
+
+function _applyProjectDoc(projDoc, shareToken) {
+  const title = projDoc.fields.title?.stringValue || '';
+  const theme = projDoc.fields.theme?.stringValue || '';
+  if (title) {
+    state.projectName  = title;
+    state.projectTheme = theme || '';
+    document.getElementById('project-name').value  = title;
+    document.getElementById('project-theme').value = theme || '';
+    post({ type: 'set-storage', key: 'projectName',  value: title });
+    post({ type: 'set-storage', key: 'projectTheme', value: theme || '' });
+  }
+  if (shareToken && shareToken !== state.shareToken) {
+    state.shareToken = shareToken;
+    post({ type: 'set-storage', key: 'shareToken', value: shareToken });
+  }
+
+  const pagesMap  = projDoc.fields.pages?.mapValue?.fields || {};
+  const pageData  = pagesMap[state.pageType]?.mapValue?.fields;
+  if (!pageData) { if (title) showToast(`✓ Loaded: ${title}`); return true; }
+
+  const sectionsArr = pageData.sections?.arrayValue?.values || [];
+  const frameByName = {};
+  state.frames.forEach(f => { frameByName[f.name.toLowerCase().trim()] = f; });
+
+  let loaded = 0;
+  sectionsArr.forEach(sVal => {
+    const sf = sVal?.mapValue?.fields;
+    if (!sf) return;
+    const name   = sf.name?.stringValue   || '';
+    const status = sf.status?.stringValue || 'existing';
+    const notes  = sf.notes?.stringValue  || '';
+    const frame  = frameByName[name.toLowerCase().trim()];
+    if (!frame) return;
+    ensureSection(frame.id);
+    state.sections[frame.id].status = status;
+    if (notes) state.sections[frame.id].notes = notes;
+    loaded++;
+  });
+
+  if (loaded > 0) { saveSections(); renderFrames(); }
+  showToast(title ? `✓ Loaded: ${title} (${loaded} section${loaded !== 1 ? 's' : ''})` : `✓ Existing project loaded`);
+  return true;
 }
 
 // ── File context detection ────────────────────────────────────
