@@ -1,0 +1,39 @@
+[[redirects]]
+  from = "/cro"
+  to   = "/cro/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/cro/"
+  to   = "/cro/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/handover"
+  to   = "/handover/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/handover/"
+  to   = "/handover/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/handover-plugin"
+  to   = "/landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/handover-plugin/"
+  to   = "/landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/kbx-demo"
+  to   = "/kbx-demo/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/kbx-demo/"
+  to   = "/kbx-demo/index.html"
+  status = 200

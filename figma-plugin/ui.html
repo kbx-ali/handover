@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design → Dev Handover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* ── Kubix brand ── */
+  --kbx-black:    #28282B;
+  --kbx-yellow:   #FFFF00;
+  --kbx-yellow-dk:#CCCC00;
+  --kbx-mint:     #94F7A1;
+  --kbx-mint-dk:  #72e880;
+  --kbx-teal:     #0D6987;
+  --kbx-teal-glow:rgba(13,105,135,0.22);
+
+  /* ── Dark surfaces (default) ── */
+  --bg:       #141416;
+  --bg-hdr:   #28282B;
+  --bg-card:  #28282B;
+  --bg-input: #333337;
+  --border:   #3E3E42;
+
+  /* ── Grid background line ── */
+  --grid-line: rgba(255,255,255,0.025);
+
+  /* ── Text ── */
+  --text:     #FFFFFF;
+  --text-sec: #D4D4D8;
+  --text-mute:#A0A0A6;
+  --text-sub: #6E6E74;
+
+  /* ── Status — exact match to web app ── */
+  --c-exist-bg: #94F7A1; --c-exist-bd: #5EE872; --c-exist-tx: #28282B; --c-exist-dot: #2EAB42;
+  --c-mod-bg:   #FFFF00; --c-mod-bd:   #CCCC00; --c-mod-tx:   #28282B; --c-mod-dot:   #999900;
+  --c-bsp-bg:   #E591E5; --c-bsp-bd:   #C860C8; --c-bsp-tx:   #28282B; --c-bsp-dot:   #9E1FA0;
+
+  /* ── Radii & shadows ── */
+  --radius-card: 2px;
+  --radius:       2px;
+  --radius-sm:    6px;
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.55);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.75);
+
+  /* ── Fonts ── */
+  --font-heading: 'Domine', Georgia, serif;
+  --font-body:    'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px; line-height: 1.45; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+#root { display: flex; flex-direction: column; height: 100vh; }
+.screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── Header ── */
+.hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; background: var(--bg-hdr);
+  border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+}
+.hdr-logo { display: flex; align-items: center; gap: 10px; }
+.hdr-logo-text { line-height: 1.2; }
+.hdr-logo-text .title {
+  font-family: var(--font-heading); font-size: 13px; font-weight: 700; color: #FFFFFF;
+}
+.hdr-logo-text .subtitle {
+  font-size: 10px; color: rgba(255,255,255,0.3);
+  text-transform: uppercase; letter-spacing: 0.09em;
+}
+.hdr-actions { display: flex; gap: 5px; }
+.icon-btn {
+  width: 28px; height: 28px; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.05); color: var(--text-mute); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.icon-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.1); }
+
+/* ── Scrollable content ── */
+.content {
+  flex: 1; overflow-y: auto; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Footer ── */
+.footer {
+  padding: 12px 14px; border-top: 1px solid var(--border);
+  background: var(--bg-card); flex-shrink: 0; display: flex; gap: 8px;
+}
+
+/* ── Form fields ── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.09em; color: var(--text-sub); font-family: var(--font-body);
+}
+.field input, .field select, .field textarea {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 12.5px;
+  padding: 7px 10px; width: 100%; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s; font-family: var(--font-body);
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--kbx-teal); box-shadow: 0 0 0 3px var(--kbx-teal-glow);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--text-sub); }
+.field select {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236E6E74' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 28px;
+}
+.field select option { background: #1e1e20; }
+.field small { font-size: 10px; color: var(--text-sub); line-height: 1.5; margin-top: 1px; }
+
+/* ── Divider ── */
+.divider {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); gap: 8px;
+}
+.divider-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.09em; color: var(--text-sub); font-family: var(--font-body);
+}
+.refresh-btn {
+  font-size: 11px; font-weight: 600; font-family: var(--font-body);
+  color: var(--text-sub); background: transparent; border: none;
+  cursor: pointer; display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.refresh-btn:hover { color: var(--text); background: var(--bg-input); }
+
+/* ── Frame cards ── */
+.frames-list { display: flex; flex-direction: column; gap: 8px; }
+.frame-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-card); overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.frame-card:hover { border-color: var(--text-sub); box-shadow: var(--shadow-hover); }
+.frame-card.excluded { opacity: 0.35; }
+
+.frame-card-top {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px 10px;
+}
+.frame-check {
+  margin-top: 3px; accent-color: var(--kbx-mint); cursor: pointer;
+  flex-shrink: 0; width: 13px; height: 13px;
+}
+/* Wrapper that stacks name + status buttons in a column */
+.frame-card-info {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;
+}
+.frame-name {
+  font-family: var(--font-heading); font-size: 12px; font-weight: 600;
+  color: var(--text); word-break: break-word; line-height: 1.35;
+}
+
+/* ── Status buttons — match web app style ── */
+.status-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.status-btn {
+  font-size: 11px; font-weight: 700; font-family: var(--font-body);
+  border: 1px solid var(--border); background: transparent; color: var(--text-mute);
+  cursor: pointer; padding: 5px 9px; border-radius: 6px;
+  transition: all 0.12s; white-space: nowrap; line-height: 1;
+}
+.status-btn:hover { color: var(--text); border-color: var(--text-mute); background: var(--bg-input); }
+.status-btn.sel-existing {
+  background: var(--c-exist-bg); border-color: var(--c-exist-bd); color: var(--c-exist-tx);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3.5px var(--c-exist-dot);
+}
+.status-btn.sel-modified {
+  background: var(--c-mod-bg); border-color: var(--c-mod-bd); color: var(--c-mod-tx);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3.5px var(--c-mod-dot);
+}
+.status-btn.sel-bespoke {
+  background: var(--c-bsp-bg); border-color: var(--c-bsp-bd); color: var(--c-bsp-tx);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3.5px var(--c-bsp-dot);
+}
+
+/* ── Notes area ── */
+.frame-notes {
+  padding: 9px 12px 11px 12px;
+  border-top: 1px solid var(--border);
+}
+.frame-notes textarea {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 11.5px; padding: 7px 9px; width: 100%; outline: none;
+  resize: none; font-family: var(--font-body); line-height: 1.5;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 60px; display: block;
+}
+.frame-notes textarea:focus {
+  border-color: var(--kbx-teal); box-shadow: 0 0 0 3px var(--kbx-teal-glow); min-height: 80px;
+}
+.frame-notes textarea::placeholder { color: var(--text-sub); }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 30px 16px; color: var(--text-sub); font-size: 12px; }
+.empty strong { display: block; font-family: var(--font-heading); color: var(--text-sec); margin-bottom: 6px; font-size: 13px; }
+
+/* ── Buttons ── */
+.btn-primary {
+  flex: 1; padding: 10px 14px; background: var(--kbx-mint); color: var(--kbx-black);
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 700;
+  font-family: var(--font-body); cursor: pointer; transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary:hover { background: var(--kbx-mint-dk); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+#open-btn { background: var(--kbx-yellow); color: var(--kbx-black); }
+#open-btn:hover:not(:disabled) { background: var(--kbx-yellow-dk); }
+#open-btn.dirty { background: #E591E5; color: #2d002d; }
+#open-btn.dirty:hover:not(:disabled) { background: #d470d4; }
+.btn-secondary {
+  padding: 10px 14px; background: var(--bg-input); color: var(--text-sec);
+  border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+  font-weight: 600; font-family: var(--font-body); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--text-mute); }
+.btn-danger {
+  padding: 10px 14px; background: transparent; color: #F87171;
+  border: 1px solid rgba(239,68,68,0.35); border-radius: 6px; font-size: 13px;
+  font-weight: 600; font-family: var(--font-body); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap; flex: 1;
+}
+.btn-danger:hover { background: rgba(239,68,68,0.1); border-color: #F87171; }
+.btn-danger.confirming {
+  background: rgba(127,29,29,0.6); color: #FCA5A5; border-color: #EF4444;
+}
+.danger-zone {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 8px;
+}
+.danger-zone-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  color: #7F1D1D; text-transform: uppercase; margin-bottom: 8px;
+  font-family: var(--font-body);
+}
+[data-theme="light"] .danger-zone-label { color: #DC2626; }
+.danger-zone-desc {
+  font-size: 11px; color: var(--text-sub); line-height: 1.6;
+  margin-bottom: 12px; font-family: var(--font-body);
+}
+.danger-zone-row { display: flex; gap: 8px; }
+
+/* ── Settings ── */
+.back-btn {
+  display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+  font-family: var(--font-body); color: var(--text-mute); background: transparent;
+  border: none; cursor: pointer; padding: 2px; transition: color 0.15s;
+}
+.back-btn:hover { color: var(--text); }
+.settings-title { font-family: var(--font-heading); font-size: 13px; font-weight: 700; color: var(--text-sec); }
+.info-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 13px;
+  font-size: 11px; color: var(--text-sub); line-height: 1.65; font-family: var(--font-body);
+}
+.info-box strong { color: var(--text-sec); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+  font-size: 11px; font-weight: 600; font-family: var(--font-body);
+  padding: 7px 14px; border-radius: 99px; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+.toast.show { opacity: 1; }
+
+/* ── Light mode ────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:        #F4F4EF;
+  --bg-card:   #FFFFFF;
+  --bg-input:  #EBEBE6;
+  --border:    #DDDDD8;
+  --text:      #28282B;
+  --text-sec:  #3C3C40;
+  --text-mute: #6E6E74;
+  --text-sub:  #9E9EA4;
+  --grid-line: rgba(0,0,0,0.045);
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.14);
+}
+/* Header always stays dark (Kubix brand) */
+[data-theme="light"] .hdr { border-bottom-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .icon-btn {
+  color: rgba(255,255,255,0.6);
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+}
+[data-theme="light"] .icon-btn:hover {
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.16);
+}
+/* Select option bg in light mode */
+[data-theme="light"] .field select option { background: #EBEBE6; color: #28282B; }
+/* Scrollbar in light mode */
+[data-theme="light"] .content::-webkit-scrollbar-thumb { background: #DDDDD8; }
+
+/* ── Inline SVG icons ────────────────────────────────────── */
+.pi-icon { display: inline-block; flex-shrink: 0; width: 13px; height: 13px; vertical-align: middle; }
+.pi-icon svg { display: block; width: 100%; height: 100%; }
+
+/* ── Theme toggle icons ──────────────────────────────────── */
+/* Dark mode default: show sun (click → go light) */
+.icon-sun  { display: block; }
+.icon-moon { display: none;  }
+/* Light mode: show moon (click → go dark) */
+[data-theme="light"] .icon-sun  { display: none;  }
+[data-theme="light"] .icon-moon { display: block; }
+
+/* ── Pull / sync button ──────────────────────────────────── */
+@keyframes kbx-spin { to { transform: rotate(360deg); } }
+#pull-btn { position: relative; display: none; }
+#pull-btn.visible { display: flex; }
+#pull-btn .icon-pull-spin { display: none; }
+#pull-btn.pulling .icon-pull      { display: none; }
+#pull-btn.pulling .icon-pull-spin { display: block; animation: kbx-spin 0.7s linear infinite; }
+.sync-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--kbx-yellow); display: none; pointer-events: none;
+}
+#pull-btn.has-update .sync-dot { display: block; }
+
+/* ── Update strip ────────────────────────────────────────── */
+#update-strip {
+  display: none; align-items: center; justify-content: space-between;
+  padding: 6px 14px; background: var(--kbx-yellow); color: var(--kbx-black);
+  font-size: 11px; font-weight: 700; font-family: var(--font-body);
+  flex-shrink: 0; cursor: pointer; gap: 6px;
+  border-bottom: 1px solid var(--kbx-yellow-dk); transition: background 0.15s;
+  line-height: 1;
+}
+#update-strip:hover { background: var(--kbx-yellow-dk); }
+#update-strip.show { display: flex; }
+
+/* ── Welcome screen ──────────────────────────────────────── */
+#screen-welcome .content {
+  align-items: center; justify-content: center; text-align: center; gap: 20px;
+}
+.welcome-icon {
+  width: 52px; height: 52px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto;
+}
+.welcome-title {
+  font-family: var(--font-heading); font-size: 16px; font-weight: 700;
+  color: var(--text); line-height: 1.3;
+}
+.welcome-desc {
+  font-size: 12px; color: var(--text-mute); line-height: 1.7;
+  max-width: 280px; margin: 0 auto;
+}
+.welcome-steps {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  text-align: left; display: flex; flex-direction: column; gap: 10px;
+  width: 100%;
+}
+.welcome-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 11.5px; color: var(--text-sec); line-height: 1.5;
+}
+.welcome-step-num {
+  flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--kbx-teal); color: #fff;
+  font-size: 10px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center; margin-top: 1px;
+}
+.welcome-skip {
+  font-size: 11px; color: var(--text-sub); background: none; border: none;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  font-family: var(--font-body); padding: 0; transition: color 0.15s;
+}
+.welcome-skip:hover { color: var(--text-mute); }
+
+/* ── New-file modal ──────────────────────────────────────── */
+#new-file-modal {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+#new-file-modal.show { display: flex; }
+.modal-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 2px; padding: 22px 18px 18px; width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.75);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.modal-icon {
+  width: 42px; height: 42px; background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-title {
+  font-family: var(--font-heading); font-size: 15px; font-weight: 700;
+  color: var(--text); line-height: 1.3;
+}
+.modal-sub {
+  font-size: 11.5px; color: var(--text-mute); line-height: 1.65; margin-top: -4px;
+}
+.modal-prev {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-sub);
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 2px; padding: 5px 10px; display: inline-block;
+  font-family: var(--font-body);
+}
+.modal-btns { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="root">
+
+  <!-- ═══ MAIN SCREEN ═══════════════════════════════════════ -->
+  <div id="screen-main" class="screen active">
+
+    <div class="hdr">
+      <div class="hdr-logo">
+        <svg width="26" height="26" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+        <div class="hdr-logo-text">
+          <div class="title">Design → Dev</div>
+          <div class="subtitle" id="hdr-page-name">Loading…</div>
+        </div>
+      </div>
+      <div class="hdr-actions">
+        <button class="icon-btn" id="pull-btn" title="Pull updates from web app">
+          <span class="pi-icon icon-pull"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.1L1 10"/></svg></span>
+          <span class="pi-icon icon-pull-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.1L1 10"/></svg></span>
+          <span class="sync-dot"></span>
+        </button>
+        <button class="icon-btn theme-toggle-btn" title="Toggle light/dark mode">
+          <span class="pi-icon icon-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+          <span class="pi-icon icon-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+        </button>
+        <button class="icon-btn" id="settings-btn" title="Settings">
+          <span class="pi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <button id="update-strip" title="Download latest version">
+      <span id="update-strip-text">↑ Update available</span>
+      <span style="opacity:0.55; font-weight:600;">Download →</span>
+    </button>
+
+    <div class="content">
+      <div class="field">
+        <label>Project Name</label>
+        <input type="text" id="project-name" placeholder="e.g. Client Name Redesign">
+      </div>
+      <div class="field">
+        <label>Base Theme</label>
+        <input type="text" id="project-theme" placeholder="e.g. Dawn, Impulse, Hyper…">
+      </div>
+      <div class="field">
+        <label>This Figma page is the…</label>
+        <select id="page-type">
+          <option value="homepage">Homepage</option>
+          <option value="collection">Collection Page</option>
+          <option value="product">Product Page</option>
+          <option value="aboutus">About Us</option>
+          <option value="contactus">Contact Us</option>
+        </select>
+      </div>
+
+      <div class="field" id="source-frame-field" style="display:none">
+        <label>Sections from</label>
+        <select id="source-frame"></select>
+        <small>Multiple container frames detected — select which one holds your desktop sections.</small>
+      </div>
+
+      <div class="divider">
+        <span class="divider-label" id="frames-count">Frames</span>
+        <button class="refresh-btn" id="refresh-btn">
+          <span class="pi-icon" style="width:11px;height:11px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.1L1 10"/></svg></span>
+          Refresh
+        </button>
+      </div>
+
+      <div class="frames-list" id="frames-list"></div>
+    </div>
+
+    <div class="footer">
+      <button class="btn-primary" id="open-btn">
+        <span class="pi-icon" style="width:14px;height:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
+        <span id="open-btn-label">Open in Handover</span>
+      </button>
+    </div>
+
+  </div><!-- /screen-main -->
+
+
+  <!-- ═══ SETTINGS SCREEN ════════════════════════════════════ -->
+  <div id="screen-settings" class="screen">
+
+    <div class="hdr">
+      <button class="back-btn" id="back-btn">
+        <span class="pi-icon" style="width:12px;height:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        Back
+      </button>
+      <span class="settings-title">Settings</span>
+      <button class="icon-btn theme-toggle-btn" title="Toggle light/dark mode">
+        <span class="pi-icon icon-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+        <span class="pi-icon icon-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+      </button>
+    </div>
+
+    <div class="content">
+      <div class="field">
+        <label>Handover App URL</label>
+        <input type="url" id="app-url" placeholder="https://kbx-ali.github.io/design-to-dev-handover/design-to-dev-handover-v3-figma.html">
+        <small>Where your Design → Dev Handover web app is hosted.</small>
+      </div>
+      <div class="info-box">
+        <strong>Sign in required</strong><br>
+        The web app now uses your Kubix Google account for sign-in — no GitHub tokens or Figma tokens needed. Just click "Open in Handover" and sign in with Google.
+      </div>
+      <div class="field">
+        <label>Figma File URL (for frame links)</label>
+        <input type="url" id="figma-file-url" placeholder="https://www.figma.com/design/…">
+        <small>Paste your Figma file URL so section links are always populated, even for draft files where Figma doesn't provide a file key automatically.</small>
+      </div>
+
+      <div class="danger-zone">
+        <div class="danger-zone-label">Danger Zone</div>
+        <p class="danger-zone-desc">Clears all stored data for this plugin — sections, statuses, notes, project name, and saved settings. Use this to start fresh after testing.</p>
+        <div class="danger-zone-row">
+          <button class="btn-danger" id="reset-btn">Reset All Data</button>
+          <button class="btn-secondary" id="reset-cancel-btn" style="display:none">Cancel</button>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:4px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:10px; color:var(--text-sub); font-family:var(--font-body);">Plugin version <strong id="settings-version" style="color:var(--text-mute);"></strong></span>
+        <button id="settings-update-btn" style="display:none; font-size:10px; font-weight:700; font-family:var(--font-body); background:var(--kbx-yellow); color:var(--kbx-black); border:none; border-radius:2px; padding:3px 9px; cursor:pointer; line-height:1.6;">↑ Update available</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button class="btn-secondary" id="back-btn-2">Cancel</button>
+      <button class="btn-primary" id="save-settings-btn">Save Settings</button>
+    </div>
+
+  </div><!-- /screen-settings -->
+
+
+  <!-- ═══ WELCOME SCREEN (first ever launch) ════════════════════ -->
+  <div id="screen-welcome" class="screen">
+    <div class="hdr">
+      <div class="hdr-logo">
+        <svg width="26" height="26" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+        <div class="hdr-logo-text">
+          <div class="title">Design → Dev</div>
+          <div class="subtitle">Handover</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="welcome-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="var(--kbx-yellow)" d="M12 1h2v8h8v4h-2v-2h-8V5h-2V3h2zM8 7V5h2v2zM6 9V7h2v2zm-2 2V9h2v2zm10 8v2h-2v2h-2v-8H2v-4h2v2h8v6zm2-2v2h-2v-2zm2-2v2h-2v-2zm0 0h2v-2h-2z"/></svg>
+      </div>
+      <div class="welcome-title">Set up the web app first</div>
+      <p class="welcome-desc">The plugin syncs to a hosted web app. You'll need to set that up before using the plugin — it only takes a few minutes.</p>
+
+      <div class="welcome-steps">
+        <div class="welcome-step">
+          <span class="welcome-step-num">1</span>
+          <span>Host the web app files on <strong>Netlify Drop</strong> (drag &amp; drop, free, 30 seconds)</span>
+        </div>
+        <div class="welcome-step">
+          <span class="welcome-step-num">2</span>
+          <span>Open your hosted app and paste in your <strong>GitHub token</strong> and <strong>Figma token</strong> in Settings</span>
+        </div>
+        <div class="welcome-step">
+          <span class="welcome-step-num">3</span>
+          <span>Come back here, open <strong>Settings</strong> and paste your app URL + the same GitHub token</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer" style="flex-direction:column; gap:8px;">
+      <button class="btn-primary" id="welcome-open-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11V3h-8v2h4v2h-2v2h-2v2h-2v2H9v2h2v-2h2v-2h2V9h2V7h2v4zM11 5H3v16h16v-8h-2v6H5V7h6z"/></svg>
+        Open Web App
+      </button>
+      <button class="welcome-skip" id="welcome-skip-btn">I've already configured the app →</button>
+    </div>
+  </div><!-- /screen-welcome -->
+
+</div><!-- /root -->
+
+<!-- ═══ NEW-FILE MODAL (different file detected) ══════════════ -->
+<div id="new-file-modal">
+  <div class="modal-card">
+    <div class="modal-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="var(--kbx-yellow)" d="M3 3h2v2H3zm4 0h2v2H7zm2 16H7v2h2zm2 0h2v2h-2zM5 7H3v2h2zm14 0h2v2h-2zm2 4h-2v2h2zM3 11h2v2H3zm2 4H3v2h2zm12 0h2v2h2v2h-2v2h-2v-2h-2v-2h2zM5 19H3v2h2zm6-16h2v2h-2zm6 0h-2v2h2zm4 0h-2v2h2z"/></svg>
+    </div>
+    <div class="modal-title">Looks like a new Figma file</div>
+    <p class="modal-sub">This file is different from the one you last worked on. What would you like to do?</p>
+    <div class="modal-prev" id="modal-prev-project">—</div>
+    <div class="modal-btns">
+      <button class="btn-primary" id="modal-new-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M3 3h2v2H3zm4 0h2v2H7zm2 16H7v2h2zm2 0h2v2h-2zM5 7H3v2h2zm14 0h2v2h-2zm2 4h-2v2h2zM3 11h2v2H3zm2 4H3v2h2zm12 0h2v2h2v2h-2v2h-2v-2h-2v-2h2zM5 19H3v2h2zm6-16h2v2h-2zm6 0h-2v2h2zm4 0h-2v2h2z"/></svg>
+        Start a new project
+      </button>
+      <button class="btn-secondary" id="modal-continue-btn">Continue where I left off</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_URL    = 'https://kubix-design.netlify.app/handover';
+
+// ── Firestore sync constants ───────────────────────────────────
+const FIRESTORE_PROJECT  = 'cro-strategic-roadmap';
+const FIRESTORE_BASE     = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents`;
+const SYNC_POLL_INTERVAL = 60 * 1000; // check every 60 seconds
+const LANDING_URL    = 'https://kubix-design.netlify.app/handover-plugin';
+const PLUGIN_VERSION = 'v1.0.0';
+const VERSION_CACHE_KEY = 'kbx_version_check'; // localStorage — survives sessions
+const VERSION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+// ── State ─────────────────────────────────────────────────────
+let state = {
+  pageName:        '',
+  fileKey:         '',
+  cachedFileKey:   '',   // persisted across sessions; fallback when figma.fileKey is null
+  manualFigmaUrl:  '',   // user-supplied file URL from Settings (ultimate fallback for drafts)
+  figmaFileUrl:    '',
+  topFrames:     [],   // raw top-level frame data from code.js [{ id, name, childCount, sections }]
+  sourceFrameId: '',   // which topFrame is currently the sections source
+  frames:        [],   // active sections [{ id, name, figmaLink }]
+  sections:      {},   // { frameId: { name, status, notes, included } }
+  appUrl:        DEFAULT_URL,
+  projectName:   '',
+  projectTheme:  '',
+  pageType:      'homepage',
+  hasExported:   false,
+  isDirty:       false,   // true when notes/status changed since last pull or sync
+  shareToken:    '',      // share token from web app (for Firestore pull)
+  lastSyncTs:    0,       // ms timestamp of last successful pull from web app
+  pluginSyncId:  '',      // unique ID for sync — sent in export, web app writes handover_sync/{id}
+  rootId:        '',      // figma.root.id from last session (loaded from clientStorage)
+  liveRootId:    '',      // figma.root.id of the currently open file (from page-data)
+};
+
+// ── Utilities ─────────────────────────────────────────────────
+function generateId() {
+  return 'kbx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Sections persistence ──────────────────────────────────────
+function sectionsStorageKey() {
+  return 'sections_' + (state.fileKey || 'nofk') + '_' + (state.pageName || 'nopage');
+}
+
+function saveSections() {
+  post({ type: 'set-storage', key: sectionsStorageKey(), value: state.sections });
+}
+
+
+function updateOpenBtn() {
+  const btn   = document.getElementById('open-btn');
+  const label = document.getElementById('open-btn-label');
+  if (!btn || !label) return;
+  if (state.isDirty) {
+    btn.classList.add('dirty');
+    label.textContent = 'Sync Changes with Handover';
+  } else {
+    btn.classList.remove('dirty');
+    label.textContent = 'Open in Handover';
+  }
+}
+
+// ── Version check ─────────────────────────────────────────────
+function isNewerVersion(latest, current) {
+  const parse = v => v.replace(/^v/i, '').split('.').map(Number);
+  const [lMaj, lMin, lPat] = parse(latest);
+  const [cMaj, cMin, cPat] = parse(current);
+  if (lMaj !== cMaj) return lMaj > cMaj;
+  if (lMin !== cMin) return lMin > cMin;
+  return lPat > cPat;
+}
+
+function showUpdateAvailable(latestVersion) {
+  // Header strip
+  const strip = document.getElementById('update-strip');
+  const text  = document.getElementById('update-strip-text');
+  if (strip) {
+    if (text) text.textContent = `↑ ${latestVersion} available`;
+    strip.classList.add('show');
+  }
+  // Settings button
+  const settingsBtn = document.getElementById('settings-update-btn');
+  if (settingsBtn) {
+    settingsBtn.style.display = '';
+    settingsBtn.textContent   = `↑ ${latestVersion} available`;
+  }
+}
+
+async function checkForUpdate() {
+  // Populate version label in settings regardless of update status
+  const verEl = document.getElementById('settings-version');
+  if (verEl) verEl.textContent = PLUGIN_VERSION;
+
+  try {
+    // Check cache — avoid hitting the API more than once per 24h
+    const cached = _safeLS('get', VERSION_CACHE_KEY);
+    if (cached) {
+      const { tag, ts } = JSON.parse(cached);
+      if (Date.now() - ts < VERSION_CACHE_TTL) {
+        if (tag && isNewerVersion(tag, PLUGIN_VERSION)) showUpdateAvailable(tag);
+        return;
+      }
+    }
+
+    const res = await fetch(
+      'https://api.github.com/repos/kbx-ali/design-to-dev-handover/releases/latest',
+      { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) return; // fail silently — non-critical
+
+    const data = await res.json();
+    const tag  = data.tag_name;
+    if (!tag) return;
+
+    // Cache for 24 hours so we don't spam the API on every plugin open
+    _safeLS('set', VERSION_CACHE_KEY, JSON.stringify({ tag, ts: Date.now() }));
+
+    if (isNewerVersion(tag, PLUGIN_VERSION)) showUpdateAvailable(tag);
+  } catch (e) {
+    console.warn('[VersionCheck] Failed silently:', e);
+  }
+}
+
+
+function showToast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function post(msg) {
+  parent.postMessage({ pluginMessage: msg }, '*');
+}
+
+// ── Source-frame auto-selection ───────────────────────────────
+// Returns the id of the best top-level frame to use as sections source.
+function autoSelectSource(topFrames, pageType) {
+  if (!topFrames || topFrames.length === 0) return '';
+
+  // Frames that CONTAIN child frames are the real "page" containers.
+  const containers = topFrames.filter(f => f.childCount > 0);
+
+  // No containers at all → just use the first topFrame (rare edge case)
+  if (containers.length === 0) return topFrames[0].id;
+
+  // Only one container → obvious choice
+  if (containers.length === 1) return containers[0].id;
+
+  // Multiple containers → keyword-score by page type, penalise mobile variants
+  const keywords = {
+    homepage:   ['home', 'homepage', 'index', 'landing'],
+    collection: ['collect', 'plp', 'category', 'listing', 'catalog'],
+    product:    ['product', 'pdp', 'detail'],
+    aboutus:    ['about', 'about-us', 'our-story', 'team'],
+    contactus:  ['contact', 'contact-us', 'get-in-touch'],
+  }[pageType] || [];
+
+  const isMobile = name => /mobile|mob\b/i.test(name);
+
+  const scored = containers
+    .map(f => {
+      const lower = f.name.toLowerCase();
+      const kw    = keywords.some(k => lower.includes(k)) ? 10 : 0;
+      const mob   = isMobile(f.name) ? -5 : 0;
+      return { id: f.id, score: kw + mob };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  // Best positive-score frame wins; otherwise first non-mobile container
+  if (scored[0].score > 0) return scored[0].id;
+  const nonMobile = containers.find(f => !isMobile(f.name));
+  return (nonMobile || containers[0]).id;
+}
+
+// Rebuild (or hide) the "Sections from" dropdown.
+function updateSourceSelector() {
+  const containers = state.topFrames.filter(f => f.childCount > 0);
+  const field      = document.getElementById('source-frame-field');
+  const sel        = document.getElementById('source-frame');
+  if (!field || !sel) return;
+
+  if (containers.length <= 1) {
+    field.style.display = 'none';
+    return;
+  }
+
+  field.style.display = 'flex';
+  sel.innerHTML = containers.map(f =>
+    `<option value="${esc(f.id)}"${f.id === state.sourceFrameId ? ' selected' : ''}>${esc(f.name)} (${f.sections.length} section${f.sections.length !== 1 ? 's' : ''})</option>`
+  ).join('');
+}
+
+// Switch active source frame → updates state.frames and re-renders.
+function applySourceFrame(frameId) {
+  state.sourceFrameId = frameId;
+  const tf = state.topFrames.find(f => f.id === frameId);
+  if (!tf) { state.frames = []; renderFrames(); return; }
+
+  state.frames = tf.sections;          // [{ id, name, figmaLink }]
+  state.frames.forEach(f => ensureSection(f.id));
+  renderFrames();
+}
+
+// ── Section state helpers ─────────────────────────────────────
+function ensureSection(frameId) {
+  if (!state.sections[frameId]) {
+    const frame = state.frames.find(f => f.id === frameId);
+    state.sections[frameId] = {
+      name:     frame?.name || '',
+      status:   'existing',
+      notes:    '',
+      included: true
+    };
+  }
+}
+
+function getIncludedCount() {
+  return state.frames.filter(f => state.sections[f.id]?.included !== false).length;
+}
+
+// ── Render frames list ────────────────────────────────────────
+function renderFrames() {
+  const list  = document.getElementById('frames-list');
+  const count = document.getElementById('frames-count');
+
+  if (state.frames.length === 0) {
+    count.textContent = 'No frames found';
+    list.innerHTML = `<div class="empty"><strong>No frames on this page</strong>Add frames to your Figma page, then click Refresh.</div>`;
+    return;
+  }
+
+  const inc = getIncludedCount();
+  count.textContent = `${state.frames.length} frame${state.frames.length !== 1 ? 's' : ''} · ${inc} selected`;
+
+  list.innerHTML = state.frames.map(f => {
+    ensureSection(f.id);
+    const sec      = state.sections[f.id];
+    const excluded = sec.included === false;
+    return `
+    <div class="frame-card${excluded ? ' excluded' : ''}" data-id="${f.id}">
+      <div class="frame-card-top">
+        <input type="checkbox" class="frame-check" data-id="${f.id}" ${excluded ? '' : 'checked'}>
+        <div class="frame-card-info">
+          <span class="frame-name">${esc(f.name)}</span>
+          <div class="status-group">
+            <button class="status-btn${sec.status==='existing'?' sel-existing':''}" data-id="${f.id}" data-status="existing">Existing</button>
+            <button class="status-btn${sec.status==='modified'?' sel-modified':''}" data-id="${f.id}" data-status="modified">Modified</button>
+            <button class="status-btn${sec.status==='bespoke'?' sel-bespoke':''}"  data-id="${f.id}" data-status="bespoke">Bespoke</button>
+          </div>
+        </div>
+      </div>
+      <div class="frame-notes">
+        <textarea data-id="${f.id}" placeholder="Notes for the developer…" rows="2">${esc(sec.notes)}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Bind: checkbox ──
+  list.querySelectorAll('.frame-check').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      ensureSection(id);
+      state.sections[id].included = e.target.checked;
+      saveSections();
+      e.target.closest('.frame-card').classList.toggle('excluded', !e.target.checked);
+      const inc2 = getIncludedCount();
+      document.getElementById('frames-count').textContent =
+        `${state.frames.length} frame${state.frames.length !== 1 ? 's' : ''} · ${inc2} selected`;
+    });
+  });
+
+  // ── Bind: status buttons ──
+  list.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id     = e.target.dataset.id;
+      const status = e.target.dataset.status;
+      ensureSection(id);
+      state.sections[id].status = status;
+      saveSections();
+      e.target.closest('.status-group').querySelectorAll('.status-btn').forEach(b => {
+        b.className = 'status-btn' + (b.dataset.status === status ? ' sel-' + status : '');
+      });
+      state.isDirty = true; updateOpenBtn();
+    });
+  });
+
+  // ── Bind: notes textarea ──
+  list.querySelectorAll('.frame-notes textarea').forEach(ta => {
+    ta.addEventListener('input', e => {
+      ensureSection(e.target.dataset.id);
+      state.sections[e.target.dataset.id].notes = e.target.value;
+      saveSections();
+      state.isDirty = true; updateOpenBtn();
+    });
+  });
+
+}
+
+// ── Build export payload ──────────────────────────────────────
+function buildExportData() {
+  const pageType = state.pageType;
+  const included = state.frames.filter(f => state.sections[f.id]?.included !== false);
+
+  // Use live fileKey first, fall back to the last cached key so section links
+  // are always populated even when figma.fileKey returns null (e.g. draft files).
+  const effectiveFileKey  = state.fileKey || state.cachedFileKey;
+  const effectivePageName = state.pageName;
+
+  const sections = included.map(f => {
+    const sec = state.sections[f.id] || {};
+    // If code.js could not build a figmaLink (fileKey was null at scan time),
+    // construct one now using the effective key + the section's node ID.
+    const figmaLink = f.figmaLink || (effectiveFileKey && f.id
+      ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}?node-id=${f.id.replace(':', '-')}`
+      : '');
+    // Omit default values to keep the payload compact (reduces URL length,
+    // avoiding potential truncation by figma.openExternal).
+    const entry = {
+      name:     f.name,
+      status:   sec.status || 'existing',
+      figmaLink
+    };
+    if (sec.notes) entry.notes = sec.notes;
+    return entry;
+  });
+
+  // Use a node-specific Figma URL so the web app's "Populate from Figma"
+  // button drills into exactly the right source frame (not the whole file).
+  const nodeId = state.sourceFrameId
+    ? state.sourceFrameId.replace(':', '-')
+    : '';
+  const pageFigmaUrl = (effectiveFileKey && nodeId)
+    ? `https://www.figma.com/design/${effectiveFileKey}?node-id=${nodeId}`
+    : state.figmaFileUrl;
+
+  // Only include the active page to minimise URL length — the web app fills
+  // in missing page keys with defaults.
+  const pages = {};
+  pages[pageType] = { figmaUrl: pageFigmaUrl || '', sections };
+
+  return {
+    title:        state.projectName  || 'Figma Import',
+    theme:        state.projectTheme || '',
+    // Use effectiveFileKey so the web app can match this project by file key
+    // even when figma.fileKey is null (e.g. draft files) and state.figmaFileUrl is empty.
+    figmaFileUrl: effectiveFileKey
+      ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}`
+      : (state.figmaFileUrl || ''),
+    activePage:   pageType,
+    pluginSyncId: state.pluginSyncId || '',
+    pages
+  };
+}
+
+// ── Open in Handover ──────────────────────────────────────────
+document.getElementById('open-btn').addEventListener('click', () => {
+  const inc = getIncludedCount();
+  if (inc === 0) { showToast('⚠ Select at least one frame'); return; }
+
+  post({ type: 'set-storage', key: 'projectName',  value: state.projectName  });
+  post({ type: 'set-storage', key: 'projectTheme', value: state.projectTheme });
+
+  // Ensure a stable sync ID exists for web→plugin communication
+  if (!state.pluginSyncId) {
+    state.pluginSyncId = 'ps_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    post({ type: 'set-storage', key: 'pluginSyncId', value: state.pluginSyncId });
+  }
+
+  const data    = buildExportData();
+  const json    = JSON.stringify(data);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+  // encodeURIComponent ensures base64 '+' characters aren't decoded as spaces
+  // by URLSearchParams.get() on the receiving end, which would corrupt atob().
+  const url     = `${state.appUrl}?import=${encodeURIComponent(encoded)}`;
+
+  // Warn if URL is very long — figma.openExternal may truncate or reject it
+  if (url.length > 8000) {
+    console.warn('[Export] URL length:', url.length, '— may be too long for figma.openExternal');
+    showToast('⚠ Large payload — if the browser opens but shows the library, try removing long notes');
+  }
+
+  post({ type: 'open-url', url });
+  state.isDirty = false; updateOpenBtn();
+  showToast(`✓ Opening ${inc} section${inc !== 1 ? 's' : ''} in Handover`);
+
+  if (!state.hasExported) {
+    state.hasExported = true;
+    post({ type: 'set-storage', key: 'hasExported', value: true });
+  }
+});
+
+// ── Settings ─────────────────────────────────────────────────
+document.getElementById('settings-btn').addEventListener('click', () => {
+  document.getElementById('app-url').value        = state.appUrl;
+  document.getElementById('figma-file-url').value = state.manualFigmaUrl;
+  showScreen('screen-settings');
+});
+
+function goBack() {
+  // Cancel any pending reset confirmation when leaving settings
+  resetConfirmClear();
+  showScreen('screen-main');
+}
+document.getElementById('back-btn').addEventListener('click', goBack);
+document.getElementById('back-btn-2').addEventListener('click', goBack);
+
+// ── Reset all plugin data ─────────────────────────────────────
+const ALL_STORAGE_KEYS = ['appUrl', 'projectName', 'projectTheme', 'hasExported', 'cachedFileKey', 'manualFigmaUrl', 'shareToken', 'lastSyncTs', 'pluginSyncId', 'rootId'];
+let _resetConfirming = false;
+
+function resetConfirmClear() {
+  _resetConfirming = false;
+  const btn = document.getElementById('reset-btn');
+  if (btn) { btn.textContent = 'Reset All Data'; btn.classList.remove('confirming'); }
+  const cancel = document.getElementById('reset-cancel-btn');
+  if (cancel) cancel.style.display = 'none';
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!_resetConfirming) {
+    _resetConfirming = true;
+    const btn = document.getElementById('reset-btn');
+    btn.textContent = 'Tap again to confirm';
+    btn.classList.add('confirming');
+    document.getElementById('reset-cancel-btn').style.display = '';
+    return;
+  }
+  // Confirmed — delete all known keys including the current sections key
+  const keysToDelete = [...ALL_STORAGE_KEYS, sectionsStorageKey()];
+  keysToDelete.forEach(k => post({ type: 'del-storage', key: k }));
+  // Reset in-memory state
+  state.sections      = {};
+  state.projectName   = '';
+  state.projectTheme  = '';
+  state.shareToken    = '';
+  state.lastSyncTs    = 0;
+  state.appUrl        = DEFAULT_URL;
+  state.hasExported   = false;
+  state.cachedFileKey = '';
+  state.manualFigmaUrl = '';
+  state.pluginSyncId = '';
+  resetConfirmClear();
+  renderFrames();
+  showToast('Plugin data cleared — starting fresh.');
+  showScreen('screen-main');
+});
+
+document.getElementById('reset-cancel-btn').addEventListener('click', resetConfirmClear);
+
+document.getElementById('save-settings-btn').addEventListener('click', () => {
+  const url          = document.getElementById('app-url').value.trim() || DEFAULT_URL;
+  const manualUrl    = document.getElementById('figma-file-url').value.trim();
+  state.appUrl        = url;
+  state.manualFigmaUrl = manualUrl;
+  // Extract fileKey from the manual URL so buildExportData can use it
+  const m = manualUrl.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
+  if (m) {
+    state.cachedFileKey = m[1];
+    post({ type: 'set-storage', key: 'cachedFileKey', value: m[1] });
+  }
+  post({ type: 'set-storage', key: 'appUrl',         value: url         });
+  post({ type: 'set-storage', key: 'manualFigmaUrl', value: manualUrl   });
+  showToast('✓ Settings saved');
+  goBack();
+});
+
+// ── Refresh ───────────────────────────────────────────────────
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  post({ type: 'refresh' });
+});
+
+// ── Pull from Firestore ───────────────────────────────────────
+document.getElementById('pull-btn').addEventListener('click', pullFromFirestore);
+
+let _syncPollTimer = null;
+
+function startSyncPolling() {
+  clearInterval(_syncPollTimer);
+  checkForWebAppUpdates();
+  _syncPollTimer = setInterval(checkForWebAppUpdates, SYNC_POLL_INTERVAL);
+}
+
+async function checkForWebAppUpdates() {
+  // Try both the fileKey-based and pluginSyncId-based sync docs
+  const fk = state.fileKey || state.cachedFileKey;
+  const syncId = state.pluginSyncId;
+  if (!fk && !syncId) return;
+
+  // Check all available sync keys — fileKey first, then pluginSyncId
+  const keysToTry = [];
+  if (fk)     keysToTry.push(fk);
+  if (syncId) keysToTry.push(syncId);
+
+  for (const key of keysToTry) {
+    try {
+      const res = await fetch(`${FIRESTORE_BASE}/handover_sync/${key}`);
+      if (!res.ok) continue; // no sync doc for this key — try next
+      const doc = await res.json();
+      if (!doc.fields) continue;
+
+      // Parse Firestore timestamp value
+      const tsVal = doc.fields.updatedAt?.timestampValue;
+      if (!tsVal) continue;
+      const ts = new Date(tsVal).getTime();
+
+      // Cache the shareToken so we can pull later
+      const shareToken = doc.fields.shareToken?.stringValue || '';
+      if (shareToken && shareToken !== state.shareToken) {
+        state.shareToken = shareToken;
+        post({ type: 'set-storage', key: 'shareToken', value: shareToken });
+      }
+
+      // If the web app is newer than our last pull, show indicator
+      if (ts > state.lastSyncTs) {
+        const updatedBy = doc.fields.updatedBy?.stringValue || 'Someone';
+        showSyncIndicator(updatedBy);
+      }
+      return; // success — don't try other keys
+    } catch(e) {
+      // Fail silently — try next key
+    }
+  }
+}
+
+function showSyncIndicator(updatedBy) {
+  const btn = document.getElementById('pull-btn');
+  if (!btn) return;
+  btn.classList.add('visible', 'has-update');
+  btn.title = `${updatedBy} updated the web app — click to pull changes`;
+}
+
+async function pullFromFirestore() {
+  if (!state.shareToken) {
+    showToast('⚠ No share link yet — generate one in the web app first');
+    return;
+  }
+  const btn = document.getElementById('pull-btn');
+  if (btn) btn.classList.add('pulling');
+
+  try {
+    const res = await fetch(`${FIRESTORE_BASE}/handover_public/${state.shareToken}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const doc = await res.json();
+    if (!doc.fields) throw new Error('Empty document');
+
+    // Firestore REST API returns nested mapValue/arrayValue structures — parse them
+    const pagesMap = doc.fields.pages?.mapValue?.fields || {};
+    const pageKey  = state.pageType || 'homepage';
+    const pageData = pagesMap[pageKey]?.mapValue?.fields;
+    if (!pageData) throw new Error(`No data for page: ${pageKey}`);
+
+    const sectionsArr = pageData.sections?.arrayValue?.values || [];
+    let updatedCount = 0;
+
+    // Build a name→frame lookup for matching (web app IDs are kbx_..., plugin IDs are Figma node IDs)
+    const frameByName = {};
+    state.frames.forEach(f => {
+      frameByName[f.name.toLowerCase().trim()] = f;
+    });
+
+    sectionsArr.forEach(sVal => {
+      const sf = sVal?.mapValue?.fields;
+      if (!sf) return;
+      const webId = sf.id?.stringValue || sf.id?.integerValue || '';
+      const name  = sf.name?.stringValue || '';
+
+      // Match by ID first (if plugin exported to web, the ID might match), then by name
+      let frame = state.frames.find(f => f.id === String(webId));
+      if (!frame && name) {
+        frame = frameByName[name.toLowerCase().trim()];
+      }
+      if (!frame) return;
+
+      const fid = frame.id;
+      if (!state.sections[fid]) state.sections[fid] = {};
+      if (sf.notes  !== undefined) state.sections[fid].notes  = sf.notes.stringValue  || '';
+      if (sf.status !== undefined) state.sections[fid].status = sf.status.stringValue || 'existing';
+      updatedCount++;
+    });
+
+    // Persist and re-render
+    state.lastSyncTs = Date.now();
+    state.isDirty    = false;
+    post({ type: 'set-storage', key: 'lastSyncTs', value: state.lastSyncTs });
+    saveSections();
+    renderFrames();
+    updateOpenBtn();
+
+    if (btn) btn.classList.remove('pulling', 'has-update', 'visible');
+    showToast(`✓ Pulled updates (${updatedCount} frame${updatedCount !== 1 ? 's' : ''} updated)`);
+
+  } catch(e) {
+    if (btn) btn.classList.remove('pulling');
+    showToast('⚠ Pull failed — check your connection');
+    console.error('[Pull]', e);
+  }
+}
+
+// ── Live field sync ───────────────────────────────────────────
+document.getElementById('project-name').addEventListener('input',  e => { state.projectName  = e.target.value; });
+document.getElementById('project-theme').addEventListener('input', e => { state.projectTheme = e.target.value; });
+document.getElementById('page-type').addEventListener('change', e => {
+  state.pageType = e.target.value;
+  if (state.topFrames.length > 0) {
+    const bestId = autoSelectSource(state.topFrames, state.pageType);
+    applySourceFrame(bestId);   // sets state.sourceFrameId + state.frames + renders
+    updateSourceSelector();     // update dropdown to reflect new selection
+  }
+});
+
+document.getElementById('source-frame').addEventListener('change', e => {
+  applySourceFrame(e.target.value);
+});
+
+// ── Messages from Figma sandbox ───────────────────────────────
+window.onmessage = event => {
+  const msg = event.data?.pluginMessage;
+  if (!msg) return;
+
+  if (msg.type === 'page-data') {
+    const d = msg.data;
+    _pageDataReady = true;
+    state.pageName     = d.pageName;
+    state.fileKey      = d.fileKey;
+    state.liveRootId   = d.rootId || '';
+    state.figmaFileUrl = d.figmaFileUrl;
+    // Persist the file key whenever Figma provides one, so it can be used as
+    // a fallback in future sessions where figma.fileKey returns null (e.g. drafts).
+    if (d.fileKey) {
+      state.cachedFileKey = d.fileKey;
+      post({ type: 'set-storage', key: 'cachedFileKey', value: d.fileKey });
+    }
+    state.topFrames    = d.topFrames || [];
+
+    document.getElementById('hdr-page-name').textContent = d.pageName || 'Figma Page';
+
+    // Auto-detect page type from Figma page name
+    const lower = (d.pageName || '').toLowerCase();
+    if      (lower.includes('collect') || lower.includes('plp'))    state.pageType = 'collection';
+    else if (lower.includes('product') || lower.includes('pdp'))    state.pageType = 'product';
+    else if (lower.includes('about'))                               state.pageType = 'aboutus';
+    else if (lower.includes('contact'))                             state.pageType = 'contactus';
+    else                                                            state.pageType = 'homepage';
+    document.getElementById('page-type').value = state.pageType;
+
+    // Pick the best source frame, build the selector, then apply
+    const bestId = autoSelectSource(state.topFrames, state.pageType);
+    applySourceFrame(bestId);  // sets sourceFrameId + frames + renders
+    updateSourceSelector();    // show/populate dropdown if needed
+
+    // Restore any previously saved section states (notes, status, included)
+    post({ type: 'get-storage', key: sectionsStorageKey() });
+    // Trigger file-context check in case all storage-value responses already arrived
+    _maybeCheckFileContext();
+  }
+
+  if (msg.type === 'storage-value') {
+    const { key, value } = msg;
+    // Count every init key response (even null) so we know when all are loaded
+    if (INIT_KEYS.includes(key)) { _initStorageCount++; _maybeCheckFileContext(); }
+    if (!value) return;
+    if (key === 'appUrl')       { state.appUrl       = value; }
+    if (key === 'projectName')  { state.projectName  = value; document.getElementById('project-name').value  = value; }
+    if (key === 'projectTheme') { state.projectTheme = value; document.getElementById('project-theme').value = value; }
+    if (key === 'hasExported')   { state.hasExported   = !!value; }
+    if (key === 'shareToken')    { state.shareToken    = value || ''; }
+    if (key === 'lastSyncTs')    { state.lastSyncTs    = Number(value) || 0; }
+    if (key === 'cachedFileKey') { state.cachedFileKey   = value || ''; }
+    if (key === 'pluginSyncId') { state.pluginSyncId   = value || ''; }
+    if (key === 'rootId')       { state.rootId         = value || ''; }
+    if (key === 'manualFigmaUrl') {
+      state.manualFigmaUrl = value || '';
+      // If no live/cached key yet, seed cachedFileKey from the manual URL
+      if (value && !state.cachedFileKey) {
+        const m = value.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
+        if (m) state.cachedFileKey = m[1];
+      }
+    }
+    if (key === sectionsStorageKey() && typeof value === 'object') {
+      // Restore saved notes/status/included for frames still present in the page
+      state.frames.forEach(f => {
+        if (value[f.id]) {
+          state.sections[f.id] = { ...state.sections[f.id], ...value[f.id] };
+        }
+      });
+      renderFrames();
+    }
+  }
+};
+
+// ── File context detection ────────────────────────────────────
+// We wait for all 8 storage keys AND page-data before deciding which screen
+// to show, to avoid flickering from stale state.
+const INIT_KEYS = ['appUrl', 'projectName', 'projectTheme', 'hasExported', 'cachedFileKey', 'manualFigmaUrl', 'shareToken', 'lastSyncTs', 'pluginSyncId', 'rootId'];
+let _initStorageCount = 0;
+let _pageDataReady    = false;
+
+function _maybeCheckFileContext() {
+  if (_initStorageCount >= INIT_KEYS.length && _pageDataReady) checkFileContext();
+}
+
+function checkFileContext() {
+  // Run version check once all storage keys are loaded
+  checkForUpdate();
+  // Start polling Firestore for web app updates
+  startSyncPolling();
+
+  // Case 1: Brand new install — never exported, no cached file key
+  if (!state.hasExported && !state.cachedFileKey) {
+    showScreen('screen-welcome');
+    return;
+  }
+  // Case 2: Different Figma file detected — check both fileKey and rootId
+  // rootId (figma.root.id) is always non-null even for draft files, so it
+  // catches the case where figma.fileKey returns null for an unsaved file.
+  const fileKeyChanged = state.fileKey && state.cachedFileKey
+    && state.fileKey !== state.cachedFileKey;
+  const rootIdChanged = state.liveRootId && state.rootId
+    && state.liveRootId !== state.rootId;
+
+  if (fileKeyChanged || rootIdChanged) {
+    const prevEl = document.getElementById('modal-prev-project');
+    if (prevEl) prevEl.textContent = state.projectName
+      ? `Last project: ${state.projectName}`
+      : 'Last file key: ' + (state.cachedFileKey || state.rootId).slice(0, 8) + '…';
+    document.getElementById('new-file-modal').classList.add('show');
+    return;
+  }
+  // Case 3: Same file (or draft) — persist current rootId and continue
+  if (state.liveRootId) {
+    post({ type: 'set-storage', key: 'rootId', value: state.liveRootId });
+  }
+}
+
+// "Start a new project" — keep settings, clear project-specific state
+document.getElementById('modal-new-btn').addEventListener('click', () => {
+  // Update cachedFileKey so we don't re-trigger this check on next open
+  state.cachedFileKey = state.fileKey;
+  post({ type: 'set-storage', key: 'cachedFileKey', value: state.fileKey });
+  // Persist the current rootId so next open recognises this as the same file
+  state.rootId = state.liveRootId;
+  post({ type: 'set-storage', key: 'rootId', value: state.liveRootId });
+  // Clear project-specific state (including sync IDs that belong to the old project)
+  state.projectName  = '';  state.projectTheme = '';
+  state.hasExported  = false;
+  state.sections     = {};  state.isDirty      = false;
+  state.manualFigmaUrl = '';
+  state.pluginSyncId = '';  state.shareToken   = '';
+  post({ type: 'set-storage', key: 'projectName',   value: '' });
+  post({ type: 'set-storage', key: 'projectTheme',  value: '' });
+  post({ type: 'set-storage', key: 'hasExported',   value: false });
+  post({ type: 'set-storage', key: 'manualFigmaUrl',value: '' });
+  post({ type: 'set-storage', key: 'pluginSyncId',  value: '' });
+  post({ type: 'set-storage', key: 'shareToken',    value: '' });
+  document.getElementById('project-name').value  = '';
+  document.getElementById('project-theme').value = '';
+  updateOpenBtn();
+  renderFrames();
+  document.getElementById('new-file-modal').classList.remove('show');
+  showToast('Starting fresh — sections cleared');
+});
+
+// "Continue where I left off" — just update the cached key, keep everything
+document.getElementById('modal-continue-btn').addEventListener('click', () => {
+  state.cachedFileKey = state.fileKey;
+  post({ type: 'set-storage', key: 'cachedFileKey', value: state.fileKey });
+  // Persist current rootId so next open doesn't re-trigger this modal
+  state.rootId = state.liveRootId;
+  post({ type: 'set-storage', key: 'rootId', value: state.liveRootId });
+  document.getElementById('new-file-modal').classList.remove('show');
+  showToast('Continuing with previous project');
+});
+
+// Welcome screen — open web app
+document.getElementById('welcome-open-btn').addEventListener('click', () => {
+  post({ type: 'open-url', url: state.appUrl });
+});
+
+// Welcome screen — skip (already configured)
+document.getElementById('welcome-skip-btn').addEventListener('click', () => {
+  showScreen('screen-main');
+});
+
+// ── Update strip + settings update button click ───────────────
+document.getElementById('update-strip').addEventListener('click', () => {
+  post({ type: 'open-url', url: LANDING_URL });
+});
+document.getElementById('settings-update-btn').addEventListener('click', () => {
+  post({ type: 'open-url', url: LANDING_URL });
+});
+
+// ── Initialise: load stored values ────────────────────────────
+INIT_KEYS.forEach(key => post({ type: 'get-storage', key }));
+
+// ── Theme toggle ──────────────────────────────────────────────
+function _safeLS(action, key, value) {
+  try { return action === 'get' ? localStorage.getItem(key) : localStorage.setItem(key, value); }
+  catch(e) { return null; }
+}
+function initTheme() {
+  const saved = _safeLS('get', 'kbx_plugin_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
+document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next    = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    _safeLS('set', 'kbx_plugin_theme', next);
+  });
+});
+
+initTheme();
+</script>
+</body>
+</html>

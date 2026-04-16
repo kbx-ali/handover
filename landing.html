@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design → Dev · Kubix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Nunito+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --kbx-yellow: #FFFF00;
+      --kbx-yellow-dk: #CCCC00;
+      --kbx-mint: #94F7A1;
+      --kbx-mint-dk: #72E880;
+      --kbx-orchid: #E591E5;
+      --kbx-black: #28282B;
+      --kbx-teal: #0D6987;
+      --dk-bg: #141416;
+      --dk-card: #28282B;
+      --dk-border: #3E3E42;
+      --dk-text: #FFFFFF;
+      --dk-text-sec: #D4D4D8;
+      --dk-text-mute: #A0A0A6;
+      --dk-input: #333337;
+      --lt-bg: #F5F5F0;
+      --lt-card: #FFFFFF;
+      --lt-border: #E2E2DE;
+      --lt-text: #28282B;
+      --lt-text-sec: #3C3C40;
+      --lt-text-mute: #6E6E74;
+      --existing-bg: #94F7A1; --existing-border: #5EE872; --existing-dot: #2EAB42;
+      --modified-bg: #FFFF00; --modified-border: #CCCC00; --modified-dot: #999900;
+      --bespoke-bg:  #E591E5; --bespoke-border:  #C860C8; --bespoke-dot:  #9E1FA0;
+    }
+
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito Sans', -apple-system, sans-serif;
+      background: var(--dk-bg);
+      color: var(--dk-text);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    /* ── UTILITY ───────────────────────────────────────────────── */
+    .grid-dk {
+      background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .grid-lt {
+      background-image: linear-gradient(rgba(0,0,0,0.055) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.055) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 99px; border: 1px solid;
+      padding: 3px 9px; font-size: 11px; font-weight: 700;
+      font-family: 'Nunito Sans', sans-serif;
+      color: var(--kbx-black); white-space: nowrap;
+    }
+    .badge-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .badge.ex  { background: var(--existing-bg); border-color: var(--existing-border); }
+    .badge.ex .badge-dot  { background: var(--existing-dot); }
+    .badge.mod { background: var(--modified-bg); border-color: var(--modified-border); }
+    .badge.mod .badge-dot { background: var(--modified-dot); }
+    .badge.bes { background: var(--bespoke-bg);  border-color: var(--bespoke-border); }
+    .badge.bes .badge-dot { background: var(--bespoke-dot); }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .section-label .lbl-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .lbl-mint  { color: var(--kbx-mint); }  .lbl-mint  .lbl-dot { background: var(--kbx-mint); }
+    .lbl-teal  { color: var(--kbx-teal); }  .lbl-teal  .lbl-dot { background: var(--kbx-teal); }
+    .lbl-orchid{ color: var(--kbx-orchid); }.lbl-orchid .lbl-dot { background: var(--kbx-orchid); }
+    .lbl-yellow{ color: var(--kbx-yellow); }.lbl-yellow .lbl-dot { background: var(--kbx-yellow); }
+
+    /* ── NAV ───────────────────────────────────────────────────── */
+    .nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; background: transparent;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid transparent;
+    }
+    .nav.sticky {
+      position: fixed;
+      background: rgba(20,20,22,0.88);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom-color: rgba(255,255,255,0.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-mark { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .nav-mark svg { display: block; width: 100%; height: 100%; }
+    .nav-wordmark {
+      font-family: 'Domine', serif; font-size: 15px; font-weight: 700; color: #fff; line-height: 1.2;
+    }
+    .nav-wordmark span { display: block; font-family: 'Nunito Sans', sans-serif; font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-link {
+      font-size: 11px; font-weight: 700; color: var(--dk-text-mute);
+      text-decoration: none; transition: color 0.15s;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .nav-link:hover { color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--kbx-mint); color: var(--kbx-black);
+      font-size: 13px; font-weight: 700; padding: 9px 16px;
+      border-radius: 8px; text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-nav:hover { background: var(--kbx-mint-dk); transform: translateY(-1px); }
+
+    /* ── HERO ──────────────────────────────────────────────────── */
+    .hero {
+      position: relative; min-height: 100vh;
+      background: var(--dk-bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 120px 28px 130px; text-align: center; overflow: hidden;
+    }
+    .hero-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); will-change: transform;
+    }
+    .orb-1 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, #FFFF00 0%, transparent 65%);
+      top: -160px; left: -120px; opacity: 0.12;
+    }
+    .orb-2 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #E591E5 0%, transparent 65%);
+      top: 15%; right: -80px; opacity: 0.16;
+    }
+    .orb-3 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, #94F7A1 0%, transparent 65%);
+      bottom: 5%; left: 25%; opacity: 0.12;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 30%;
+      background-color: #F5F5F0;
+      background-image: linear-gradient(rgba(0,0,0,0.055) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.055) 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 800px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 99px; padding: 5px 14px 5px 10px;
+      font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75);
+      margin-bottom: 32px; opacity: 0;
+    }
+    .hero-badge-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--kbx-yellow);
+      box-shadow: 0 0 8px var(--kbx-yellow);
+      animation: pulse-dot 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 4px var(--kbx-yellow); }
+      50% { box-shadow: 0 0 18px var(--kbx-yellow), 0 0 32px rgba(255,255,0,0.35); }
+    }
+    .hero-headline {
+      font-family: 'Domine', serif;
+      font-size: clamp(32px, 5.5vw, 60px);
+      font-weight: 400; line-height: 1.12; color: #fff;
+      letter-spacing: -0.02em; margin-bottom: 24px; opacity: 0;
+    }
+    .hero-headline .hl { color: var(--kbx-yellow); }
+    .hero-sub {
+      font-size: clamp(14px, 1.8vw, 16px);
+      color: var(--dk-text-sec); line-height: 1.75;
+      max-width: 620px; margin: 0 auto 40px; opacity: 0;
+    }
+    .hero-ctas {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap; opacity: 0;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--kbx-mint); color: var(--kbx-black);
+      font-size: 14px; font-weight: 700; padding: 13px 24px;
+      border-radius: 8px; text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--kbx-mint-dk); transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--dk-text-sec);
+      font-size: 14px; font-weight: 600; padding: 13px 24px;
+      border-radius: 8px; text-decoration: none;
+      border: 1px solid var(--dk-border);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.28); color: #fff; }
+    .hero-mockup {
+      position: relative; z-index: 2;
+      margin-top: 64px; width: 100%; max-width: 1160px; opacity: 0;
+    }
+    /* ── BROWSER CHROME ── */
+    .browser {
+      background: #1C1C1F; border-radius: 12px;
+      border: 1px solid #3A3A3E; overflow: hidden;
+      box-shadow: 0 18px 30px rgba(0,0,0,0.12), 0 20px 25px rgba(0,0,0,0.2),
+                  0 0 0 1px rgba(255,255,255,0.05),
+                  inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .browser-bar {
+      background: #252528; border-bottom: 1px solid #3A3A3E;
+      padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+    }
+    .bdots { display: flex; gap: 6px; }
+    .bdots span { width: 10px; height: 10px; border-radius: 50%; }
+    .bdots span:nth-child(1) { background: #FF5F57; }
+    .bdots span:nth-child(2) { background: #FFBD2E; }
+    .bdots span:nth-child(3) { background: #28CA42; }
+    .burl {
+      flex: 1; background: #141416; border: 1px solid #3A3A3E;
+      border-radius: 6px; padding: 4px 12px; font-size: 11px; color: #6E6E74;
+      max-width: 300px; margin: 0 auto; text-align: center;
+    }
+    /* ── APP MOCK INSIDE BROWSER ── */
+    .amock { background: #F5F5F0; font-family: 'Nunito Sans', sans-serif; }
+    .amock-hdr {
+      background: #28282B; height: 60px;
+      display: flex; align-items: center; padding: 0 20px; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .amock-back {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; padding: 4px 9px;
+      font-size: 8.5px; font-weight: 600; color: rgba(255,255,255,0.55);
+      flex-shrink: 0; white-space: nowrap; margin-right: 2px;
+    }
+    .amock-logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+    .amock-logo-mark { width: 26px; height: 26px; flex-shrink: 0; }
+    .amock-logo-mark svg { display: block; width: 26px; height: 26px; }
+    .amock-logo-textblock { line-height: 1.2; }
+    .amock-logo-title { font-family: 'Domine', serif; font-size: 12.5px; font-weight: 700; color: #fff; display: block; }
+    .amock-logo-sub { font-size: 8px; font-weight: 400; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; text-transform: uppercase; display: block; }
+    .amock-sync {
+      margin-left: auto; font-size: 8.5px; font-weight: 600; color: rgba(255,255,255,0.35);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .amock-hdr-btns { display: flex; gap: 5px; }
+    .amock-hdr-btn {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .amock-hdr-btn svg { opacity: 0.55; }
+    .amock-hdr-btn.mint { background: #94F7A1; border-color: transparent; }
+    .amock-hdr-btn.mint svg { opacity: 1; }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--kbx-mint); flex-shrink: 0; }
+    .amock-meta {
+      display: flex; align-items: center; gap: 8px; padding: 10px 18px;
+      background: #F5F5F0; border-bottom: 1px solid #E2E2DE; flex-wrap: wrap;
+    }
+    .amock-share {
+      margin-left: auto; display: flex; align-items: center; gap: 4px;
+      background: #94F7A1; border: none; border-radius: 5px;
+      padding: 4px 9px; font-size: 8.5px; font-weight: 700; color: #28282B;
+      white-space: nowrap;
+    }
+    .amock-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff; border: 1px solid #E2E2DE; border-radius: 5px;
+      padding: 4px 9px 4px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .amock-pill-lbl { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #9E9EA4; }
+    .amock-pill-val { font-size: 10.5px; font-weight: 600; color: #28282B; }
+    .amock-loom {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(240,72,72,0.08); border: 1px solid rgba(240,72,72,0.25);
+      border-radius: 5px; padding: 4px 10px;
+      font-size: 9.5px; font-weight: 700; color: #B83232;
+    }
+    .amock-loom-dot { width: 7px; height: 7px; border-radius: 50%; background: #F04848; flex-shrink: 0; }
+    .amock-tabs-wrap {
+      display: flex; gap: 4px; padding: 5px;
+      background: #fff; border: 1px solid #E2E2DE; border-radius: 10px;
+      margin: 12px 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .amock-tab {
+      flex: 1; font-size: 10px; font-weight: 600; color: #9E9EA4;
+      padding: 6px 10px; border-radius: 6px; background: transparent; border: none;
+      text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .amock-tab.on { color: #28282B; background: #FFFF00; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .amock-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: #F04848; flex-shrink: 0; }
+    .amock-body { padding: 12px 16px 16px; }
+    .amock-stats-bar {
+      background: #fff; border: 1px solid #E2E2DE; border-radius: 10px;
+      display: flex; align-items: center; padding: 12px 16px; margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .amock-stat { flex: 1; text-align: center; border-right: 1px solid #E2E2DE; padding: 0 14px; }
+    .amock-stat:first-child { padding-left: 0; text-align: left; flex: 2; }
+    .amock-stat:last-child  { border-right: none; }
+    .amock-stat-n {
+      font-family: 'Domine', serif; font-size: 24px; font-weight: 700;
+      color: #28282B; line-height: 1; margin-bottom: 4px;
+    }
+    .amock-stat-l {
+      font-size: 8.5px; font-weight: 700; color: #9E9EA4;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .amock-stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .amock-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+    .amock-card {
+      background: #fff; border: 1px solid #E2E2DE; border-radius: 10px;
+      overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .amock-card-hd {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 12px; border-bottom: 1px solid #E2E2DE;
+    }
+    .amock-card-drag { color: #D8D8D4; font-size: 9px; letter-spacing: -1px; flex-shrink: 0; }
+    .amock-card-num {
+      width: 20px; height: 20px; border-radius: 5px; background: #F2F2EE;
+      font-family: 'Domine', serif; font-size: 9px; font-weight: 700; color: #9E9EA4;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .amock-card-name { font-family: 'Domine', serif; font-size: 10px; font-weight: 600; color: #28282B; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .amock-card-bd { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
+    .amock-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 8px; font-weight: 600; color: #6E6E74;
+      background: #F2F2EE; border: 1px solid #E2E2DE;
+      border-radius: 4px; padding: 3px 6px; width: fit-content;
+    }
+    .amock-chip-dot { width: 4px; height: 4px; border-radius: 50%; background: #C8C8C4; }
+
+    /* ── FEATURES ──────────────────────────────────────────────── */
+    .features {
+      background: var(--lt-bg); padding: 0 0 100px;
+    }
+    .features-transition {
+      background-color: var(--lt-bg);
+      background-image: linear-gradient(rgba(0,0,0,0.055) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.055) 1px, transparent 1px);
+      background-size: 20px 20px;
+      padding: 80px 28px 60px;
+    }
+    .features-hdr { text-align: center; margin-bottom: 48px; }
+    .features-heading {
+      font-family: 'Domine', serif; font-size: clamp(22px,3.5vw,34px);
+      font-weight: 400; line-height: 1.2; letter-spacing: -0.015em; color: var(--lt-text);
+    }
+    .features-sub { font-size: 15px; margin-top: 12px; color: var(--lt-text-mute); }
+    .features-grid {
+      max-width: 1060px; margin: 0 auto; padding: 0 28px;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+    }
+    .feat-card {
+      background: var(--lt-card); border: 1px solid var(--lt-border);
+      border-radius: 12px; padding: 26px; opacity: 0; transform: translateY(40px);
+    }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .feat-icon.yl { background: rgba(13,105,135,0.12); }
+    .feat-icon.mt { background: rgba(148,247,161,0.12); }
+    .feat-icon.or { background: rgba(229,145,229,0.12); }
+    .feat-title { font-family: 'Domine', serif; font-size: 16px; font-weight: 700; color: var(--lt-text); margin-bottom: 9px; }
+    .feat-desc  { font-size: 13px; color: var(--lt-text-mute); line-height: 1.65; margin-bottom: 20px; }
+    .badge-stack { display: flex; flex-direction: column; gap: 7px; }
+    .badge-row { display: flex; align-items: center; gap: 8px; }
+    .badge-row-lbl { font-size: 9.5px; color: var(--lt-text-mute); font-weight: 600; width: 54px; flex-shrink: 0; }
+    .loom-preview {
+      background: #F2F2EE; border: 1px solid var(--lt-border);
+      border-radius: 8px; padding: 10px 12px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .loom-rdot {
+      width: 9px; height: 9px; border-radius: 50%; background: #F04848;
+      box-shadow: 0 0 8px rgba(240,72,72,0.45); flex-shrink: 0;
+    }
+    .loom-txt { font-size: 9.5px; color: var(--lt-text-mute); font-family: monospace; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .loom-badge-sm {
+      font-size: 8.5px; font-weight: 700; color: var(--lt-text-mute);
+      background: rgba(0,0,0,0.06); border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+    }
+    .figma-link-preview {
+      background: #F0EEF6; border: 1px solid #DDD8EE;
+      border-radius: 8px; padding: 10px 12px; margin-top: 8px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .figma-link-txt { font-size: 9.5px; color: var(--lt-text-mute); font-family: monospace; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    /* ── CLICKUP MOCK ───────────────────────────────────────── */
+    .cu-mock {
+      background: #fff; border: 1px solid var(--lt-border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .cu-parent {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 11px; background: #F5F5F0;
+      border-bottom: 1px solid var(--lt-border);
+    }
+    .cu-expand { color: #B0B0AA; font-size: 7px; flex-shrink: 0; line-height: 1; }
+    .cu-parent-icon { color: #9E9EA4; flex-shrink: 0; }
+    .cu-parent-name {
+      flex: 1; font-size: 10px; font-weight: 700; color: var(--lt-text);
+      letter-spacing: 0.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .cu-parent-count {
+      font-size: 8.5px; font-weight: 600; color: #9E9EA4;
+      background: #EAEAE6; border-radius: 99px; padding: 1px 6px; flex-shrink: 0;
+    }
+    .cu-task {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 11px 7px 20px; border-bottom: 1px solid var(--lt-border);
+    }
+    .cu-task:last-child { border-bottom: none; }
+    .cu-task-status {
+      width: 13px; height: 13px; border-radius: 50%;
+      border: 2px solid #93C5FD; flex-shrink: 0;
+    }
+    .cu-task-name {
+      flex: 1; font-size: 10.5px; font-weight: 500; color: var(--lt-text);
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .cu-tag {
+      font-size: 8px; font-weight: 700; border-radius: 4px;
+      padding: 2px 6px; flex-shrink: 0; white-space: nowrap;
+    }
+    .cu-tag-ex  { background: rgba(148,247,161,0.22); color: #1a6b2c; border: 1px solid rgba(94,232,114,0.4); }
+    .cu-tag-mod { background: rgba(255,255,0,0.22);   color: #6b5800; border: 1px solid rgba(204,204,0,0.4); }
+    .cu-tag-bes { background: rgba(229,145,229,0.22); color: #7a1e7a; border: 1px solid rgba(200,96,200,0.4); }
+
+    /* ── PLUGIN SHOWCASE ────────────────────────────────────── */
+    .plug-section { background: var(--dk-bg); padding: 110px 0; overflow: visible; position: relative; z-index: 2; }
+    /* z-index: 3 keeps how-it-works content above the #plugin canvas bleed (z-index: 2) */
+    .how-it-works { position: relative; z-index: 3; }
+    /* Gradient overlay: sits above the ripple canvas, below the section content.
+       Fades from transparent at the top (ripple visible) to solid at ~300px down (ripple hidden). */
+    .how-it-works::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 100%; pointer-events: none; z-index: 0;
+      background: linear-gradient(to bottom, transparent 0%, rgb(20, 20, 22) 100%);
+    }
+    .how-it-works > * { position: relative; z-index: 1; }
+    /* height is set by JS so the canvas can bleed below the section */
+    #plug-canvas { position: absolute; top: 0; left: 0; width: 100%; z-index: 0; pointer-events: none; }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+    .plug-inner {
+      max-width: 1060px; margin: 0 auto; padding: 0 28px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .plug-heading {
+      font-family: 'Domine', serif; font-size: clamp(32px, 4.2vw, 52px);
+      font-weight: 400; line-height: 1.1; color: #fff;
+      letter-spacing: -0.02em; margin-bottom: 20px;
+    }
+    .plug-desc { font-size: 15px; color: var(--dk-text-sec); line-height: 1.75; margin-bottom: 32px; }
+    .plug-bullets { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .plug-bullet { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--dk-text-sec); line-height: 1.5; }
+    .plug-bullet-chk {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+      background: rgba(148,247,161,0.12); border: 1px solid rgba(148,247,161,0.22);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Plugin UI mockup */
+    .plug-ui {
+      background: #1C1C1F; border: 1px solid #3A3A3E; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 28px 72px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .plug-ui-hdr {
+      background: #242428; border-bottom: 1px solid #3A3A3E;
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .plug-ui-brand { display: flex; align-items: center; gap: 8px; }
+    .plug-ui-brand-name { font-family: 'Domine', serif; font-size: 12.5px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .plug-ui-brand-page { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dk-text-mute); }
+    .plug-ui-hdr-icons { display: flex; gap: 10px; color: var(--dk-text-mute); }
+    .plug-ui-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .plug-ui-lbl { font-size: 7.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dk-text-mute); margin-bottom: 5px; }
+    .plug-ui-input {
+      background: #2C2C30; border: 1px solid #3A3A3E; border-radius: 6px;
+      padding: 7px 10px; font-size: 11px; color: var(--dk-text-sec); min-height: 34px;
+    }
+    .plug-ui-select {
+      background: #2C2C30; border: 1px solid #3A3A3E; border-radius: 6px;
+      padding: 7px 10px; font-size: 11px; color: var(--dk-text-sec);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .plug-ui-frames-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .plug-ui-refresh { font-size: 9px; color: var(--dk-text-mute); display: flex; align-items: center; gap: 3px; }
+    .plug-ui-frames { display: flex; flex-direction: column; gap: 7px; }
+    .plug-ui-frame { background: #242428; border: 1px solid #3A3A3E; border-radius: 8px; padding: 10px 12px; }
+    .plug-ui-frame-name { font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+    .plug-ui-fdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .plug-ui-frame-btns { display: flex; gap: 5px; margin-bottom: 7px; }
+    .plug-ui-fbtn {
+      font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 4px; cursor: default;
+      border: 1px solid #3A3A3E; color: var(--dk-text-mute); background: transparent;
+    }
+    .plug-ui-fbtn.a-ex  { background: var(--existing-bg);  border-color: var(--existing-border);  color: #1a1a1a; }
+    .plug-ui-fbtn.a-mod { background: var(--modified-bg);  border-color: var(--modified-border);  color: #1a1a1a; }
+    .plug-ui-fbtn.a-bes { background: var(--bespoke-bg);   border-color: var(--bespoke-border);   color: #1a1a1a; }
+    .plug-ui-notes {
+      background: #1C1C1F; border: 1px solid #3A3A3E; border-radius: 5px;
+      padding: 6px 9px; font-size: 9.5px; color: var(--dk-text-mute); line-height: 1.55;
+    }
+    .plug-ui-open {
+      background: var(--kbx-mint); color: var(--kbx-black); font-size: 11.5px; font-weight: 800;
+      border-radius: 8px; padding: 10px 14px; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 2px;
+    }
+
+    /* ── HOW IT WORKS (visual flow) ──────────────────────────── */
+    /* background-color transparent so ripple canvas shows through from #plugin below.
+       background-image: none overrides the .grid-dk class — canvas provides the grid */
+    .how-it-works { background-color: transparent; background-image: none; padding: 100px 0; overflow: hidden; }
+    .hiw-inner { max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+    .hiw-hdr { text-align: center; margin-bottom: 64px; }
+    .hiw-heading {
+      font-family: 'Domine', serif; font-size: clamp(22px,3.5vw,38px);
+      font-weight: 400; color: #fff; letter-spacing: -0.015em; line-height: 1.15;
+    }
+    .hiw-sub { font-size: 15px; color: var(--dk-text-mute); margin-top: 12px; }
+    .hiw-flow {
+      display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr; align-items: center; gap: 0;
+    }
+    .hiw-card {
+      background: var(--dk-card); border: 1px solid var(--dk-border);
+      border-radius: 14px; padding: 28px; text-align: center;
+      opacity: 0; transform: translateY(30px);
+    }
+    .hiw-arrow {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--dk-text-mute); font-size: 20px; opacity: 0.4;
+    }
+    .hiw-card-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .hiw-card-icon.figma { background: rgba(229,145,229,0.12); border: 1px solid rgba(229,145,229,0.2); }
+    .hiw-card-icon.plugin { background: rgba(255,255,0,0.1); border: 1px solid rgba(255,255,0,0.18); }
+    .hiw-card-icon.webapp { background: rgba(148,247,161,0.1); border: 1px solid rgba(148,247,161,0.18); }
+    .hiw-card-title { font-family: 'Domine', serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .hiw-card-desc { font-size: 12.5px; color: var(--dk-text-mute); line-height: 1.6; }
+
+    /* ── SETUP (the big guide) ─────────────────────────────────── */
+    .setup { background: var(--lt-bg); padding: 100px 0 120px; }
+    .setup-inner { max-width: 780px; margin: 0 auto; padding: 0 28px; }
+    .setup-hdr { text-align: center; margin-bottom: 20px; }
+    .setup-heading {
+      font-family: 'Domine', serif; font-size: clamp(24px,4vw,42px);
+      font-weight: 400; color: var(--lt-text); letter-spacing: -0.015em; line-height: 1.15;
+    }
+    .setup-sub { font-size: 15px; color: var(--lt-text-mute); margin-top: 12px; line-height: 1.65; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+    /* Before-you-start checklist */
+    .prereq {
+      background: var(--lt-card); border: 1px solid var(--lt-border);
+      border-radius: 14px; padding: 28px 32px; margin: 40px 0 48px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .prereq-title {
+      font-family: 'Domine', serif; font-size: 15px; font-weight: 700;
+      color: var(--lt-text); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .prereq-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .prereq-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13.5px; color: var(--lt-text-sec);
+    }
+    .prereq-check {
+      width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+      background: rgba(148,247,161,0.12); border: 1px solid rgba(148,247,161,0.3);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prereq-check svg { display: block; }
+    .prereq-note {
+      font-size: 12px; color: var(--lt-text-mute); margin-top: 16px; padding-top: 14px;
+      border-top: 1px solid var(--lt-border); line-height: 1.6;
+    }
+    .prereq-note strong { color: var(--lt-text-sec); font-weight: 700; }
+
+    /* Step cards */
+    .step-card {
+      background: var(--lt-card); border: 1px solid var(--lt-border);
+      border-radius: 14px; margin-bottom: 16px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      opacity: 0; transform: translateY(20px);
+    }
+    .step-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 20px 24px; cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .step-header:hover { background: rgba(0,0,0,0.015); }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Domine', serif; font-size: 16px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .sn-yellow { background: rgba(255,255,0,0.12); color: #999900; border: 1.5px solid rgba(255,255,0,0.25); }
+    .sn-mint   { background: rgba(148,247,161,0.12); color: #2EAB42; border: 1.5px solid rgba(148,247,161,0.25); }
+    .sn-orchid { background: rgba(229,145,229,0.12); color: #9E1FA0; border: 1.5px solid rgba(229,145,229,0.25); }
+    .sn-teal   { background: rgba(13,105,135,0.1);   color: #0D6987; border: 1.5px solid rgba(13,105,135,0.2); }
+    .step-header-text { flex: 1; }
+    .step-title {
+      font-family: 'Domine', serif; font-size: 15px; font-weight: 700;
+      color: var(--lt-text); line-height: 1.3;
+    }
+    .step-time {
+      font-size: 11px; font-weight: 600; color: var(--lt-text-mute);
+      margin-top: 3px;
+    }
+    .step-chevron {
+      width: 24px; height: 24px; flex-shrink: 0; color: var(--lt-text-mute);
+      transition: transform 0.25s ease;
+    }
+    .step-card.open .step-chevron { transform: rotate(180deg); }
+    @keyframes chevron-bob {
+      0%, 55%, 100% { transform: translateY(0); }
+      25% { transform: translateY(5px); }
+      40% { transform: translateY(2px); }
+    }
+    .step-card:first-child .step-chevron { animation: chevron-bob 2.8s ease-in-out 1.2s infinite; }
+    .step-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .step-card.open .step-body { max-height: 2000px; }
+    .step-body-inner {
+      padding: 0 24px 28px; padding-left: 78px;
+    }
+    .step-instructions { list-style: none; counter-reset: sub; display: flex; flex-direction: column; gap: 16px; }
+    .step-instruction {
+      display: flex; gap: 12px; font-size: 13.5px; color: var(--lt-text-sec); line-height: 1.65;
+    }
+    .sub-num {
+      counter-increment: sub;
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: #F2F2EE; border: 1px solid var(--lt-border);
+      font-size: 10px; font-weight: 700; color: var(--lt-text-mute);
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+    .sub-num::before { content: counter(sub); }
+    .step-instruction a {
+      color: var(--kbx-teal); font-weight: 600; text-decoration: none;
+      border-bottom: 1px dashed rgba(13,105,135,0.3);
+    }
+    .step-instruction a:hover { border-bottom-style: solid; }
+    .step-instruction code {
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+      background: #F2F2EE; border: 1px solid var(--lt-border);
+      border-radius: 4px; padding: 1px 5px; color: var(--lt-text);
+    }
+
+    /* Mockup screenshots within steps */
+    .step-mockup {
+      background: #F2F2EE; border: 1px solid var(--lt-border);
+      border-radius: 10px; margin-top: 16px; overflow: hidden;
+    }
+    .step-mockup-bar {
+      background: #E8E8E4; padding: 6px 12px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--lt-border);
+    }
+    .step-mockup-dots { display: flex; gap: 4px; }
+    .step-mockup-dots span { width: 7px; height: 7px; border-radius: 50%; background: #C8C8C4; }
+    .step-mockup-url { font-size: 9.5px; color: var(--lt-text-mute); font-family: monospace; }
+    .step-mockup-content { padding: 16px; }
+
+    /* GitHub mockup */
+    .gh-mock { font-family: 'Nunito Sans', sans-serif; }
+    .gh-mock-nav {
+      background: #24292e; padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-radius: 6px 6px 0 0;
+    }
+    .gh-mock-logo { color: #fff; font-size: 14px; }
+    .gh-mock-breadcrumb { font-size: 9px; color: rgba(255,255,255,0.5); }
+    .gh-mock-body { background: #fff; padding: 14px; border-radius: 0 0 6px 6px; border: 1px solid #e1e4e8; border-top: none; }
+    .gh-mock-title { font-size: 11px; font-weight: 700; color: #24292e; margin-bottom: 10px; }
+    .gh-mock-field {
+      margin-bottom: 10px;
+    }
+    .gh-mock-label { font-size: 9px; font-weight: 700; color: #586069; margin-bottom: 4px; display: block; }
+    .gh-mock-input {
+      width: 100%; background: #fafbfc; border: 1px solid #e1e4e8;
+      border-radius: 5px; padding: 5px 8px; font-size: 9.5px; color: #586069;
+    }
+    .gh-mock-scope {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px; background: #f6f8fa; border: 1px solid #e1e4e8;
+      border-radius: 5px; font-size: 9px; margin-bottom: 8px;
+    }
+    .gh-mock-checkbox {
+      width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
+      border: 1.5px solid #0366d6; background: #0366d6;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gh-mock-scope-text { font-weight: 600; color: #24292e; }
+    .gh-mock-scope-desc { color: #586069; font-weight: 400; }
+    .gh-mock-btn {
+      display: inline-flex; padding: 5px 12px; background: #2ea44f; color: #fff;
+      border: none; border-radius: 5px; font-size: 9.5px; font-weight: 700;
+    }
+
+    /* Netlify mockup */
+    .nf-mock { font-family: 'Nunito Sans', sans-serif; }
+    .nf-mock-nav {
+      background: #0e1e25; padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-radius: 6px 6px 0 0;
+    }
+    .nf-mock-logo { color: #00c7b7; font-size: 11px; font-weight: 700; letter-spacing: -0.02em; }
+    .nf-mock-body { background: #fff; padding: 14px; border-radius: 0 0 6px 6px; border: 1px solid #e1e4e8; border-top: none; text-align: center; }
+    .nf-mock-drop {
+      border: 2px dashed #d1d5da; border-radius: 10px; padding: 20px;
+      margin-bottom: 10px; background: #f8fafb;
+    }
+    .nf-mock-drop-icon { font-size: 24px; margin-bottom: 6px; color: #00c7b7; }
+    .nf-mock-drop-text { font-size: 10px; color: #586069; font-weight: 600; }
+    .nf-mock-drop-sub { font-size: 8.5px; color: #8b949e; margin-top: 3px; }
+    .nf-mock-url {
+      background: #f0faf9; border: 1px solid #b8f0ea; border-radius: 5px;
+      padding: 5px 10px; font-size: 9px; font-family: monospace; color: #0e6658;
+    }
+
+    /* App settings mockup */
+    .app-settings-mock {
+      background: var(--dk-bg); border-radius: 8px; padding: 14px;
+      border: 1px solid var(--dk-border);
+    }
+    .asm-title {
+      font-family: 'Domine', serif; font-size: 10px; font-weight: 700;
+      color: #fff; margin-bottom: 12px;
+    }
+    .asm-field { margin-bottom: 10px; }
+    .asm-label {
+      font-size: 8.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--dk-text-mute); margin-bottom: 4px; display: block;
+    }
+    .asm-input {
+      width: 100%; background: var(--dk-input); border: 1px solid var(--dk-border);
+      border-radius: 5px; padding: 6px 9px; font-size: 9.5px; color: var(--dk-text-sec);
+      font-family: monospace;
+    }
+    .asm-input.filled { color: var(--kbx-mint); border-color: rgba(148,247,161,0.3); }
+    .asm-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--kbx-mint); color: var(--kbx-black);
+      padding: 6px 14px; border-radius: 6px; border: none;
+      font-size: 9.5px; font-weight: 700; margin-top: 4px;
+    }
+
+    /* Figma import mockup — two panels */
+    .figma-mock {
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    /* Context menu panel */
+    .figma-ctx-menu {
+      background: #323232; border-radius: 7px; padding: 4px 0;
+      border: 1px solid #494949; min-width: 188px; flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .figma-ctx-item {
+      padding: 5px 14px; font-size: 9px; color: #c8c8c8; white-space: nowrap;
+    }
+    .figma-ctx-item.highlight {
+      background: #0D99FF; color: #fff; border-radius: 4px; margin: 0 3px;
+    }
+    .figma-ctx-divider { height: 1px; background: #494949; margin: 3px 0; }
+    /* File picker panel */
+    .figma-file-picker {
+      background: #2b2b2b; border-radius: 7px; border: 1px solid #454545;
+      overflow: hidden; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .figma-fp-header {
+      padding: 5px 12px; font-size: 8.5px; font-weight: 700; color: #a0a0a0;
+      border-bottom: 1px solid #454545; background: #262626;
+    }
+    .figma-fp-row {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 12px; font-size: 9px; color: #c8c8c8;
+    }
+    .figma-fp-row.selected { background: #0058CC; color: #fff; }
+    .figma-fp-icon {
+      width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 7px;
+    }
+    .figma-fp-icon.js  { background: #3d8c40; color: #fff; font-weight: 700; }
+    .figma-fp-icon.json{ background: #c0550a; color: #fff; font-weight: 700; }
+    .figma-fp-icon.html{ background: #1a73e8; color: #fff; font-weight: 700; }
+
+    /* Login screen mockup — faithful recreation */
+    .login-mock {
+      position: relative; overflow: hidden; border-radius: 8px;
+      background-color: #141416;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 22px 22px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px 20px;
+    }
+    .lm-card {
+      background: rgba(30,30,33,0.48);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 22px 20px;
+      width: 100%; max-width: 240px;
+      text-align: center;
+      backdrop-filter: blur(40px) saturate(160%);
+      -webkit-backdrop-filter: blur(40px) saturate(160%);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+    .lm-k {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      color: #FFFF00; margin-bottom: 13px;
+    }
+    .lm-wordmark-wrap {
+      display: flex; flex-direction: column; gap: 2px; text-align: left;
+    }
+    .lm-app-label {
+      font-size: 6px; font-weight: 600; color: #878790;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .lm-sub {
+      font-size: 8px; color: #878790; line-height: 1.65; margin-bottom: 13px;
+    }
+    .lm-btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 7px 10px;
+      border-radius: 6px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      font-family: inherit; font-size: 8px; font-weight: 600;
+      color: rgba(255,255,255,0.92); margin-bottom: 10px;
+    }
+    .lm-footer {
+      font-size: 7px; color: #52525a;
+      padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* Plugin settings mockup */
+    .plugin-settings-mock {
+      background: #1a1a1d; border-radius: 8px; padding: 14px 16px;
+      border: 1px solid #2a2a2e;
+    }
+    .psm-field { margin-bottom: 0; }
+    .psm-label {
+      font-size: 8px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #a0a0a8; margin-bottom: 6px; display: block;
+    }
+    .psm-input {
+      width: 100%; background: #252528; border: 1px solid #3a3a3e;
+      border-radius: 5px; padding: 7px 10px; font-size: 9px;
+      color: #6a6a72; font-family: monospace; margin-bottom: 8px;
+    }
+    .psm-hint {
+      font-size: 8.5px; color: #52525a; line-height: 1.55;
+    }
+
+    /* Tip callout */
+    .step-tip {
+      display: flex; gap: 10px; margin-top: 18px;
+      padding: 12px 14px; background: rgba(255,255,0,0.06);
+      border: 1px solid rgba(255,255,0,0.15); border-radius: 8px;
+      font-size: 12.5px; color: var(--lt-text-sec); line-height: 1.55;
+    }
+    .step-tip-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+    .step-tip strong { color: var(--lt-text); font-weight: 700; }
+
+    /* Success callout */
+    .step-success {
+      display: flex; gap: 10px; margin-top: 18px;
+      padding: 12px 14px; background: rgba(148,247,161,0.08);
+      border: 1px solid rgba(148,247,161,0.2); border-radius: 8px;
+      font-size: 12.5px; color: var(--lt-text-sec); line-height: 1.55;
+    }
+    .step-success-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+    /* ── Version tag + Download cards ───────────────────────────── */
+    .version-tag {
+      font-family: 'SF Mono','Fira Code',monospace; font-size: 10.5px; font-weight: 700;
+      background: var(--kbx-yellow); color: var(--kbx-black);
+      border-radius: 4px; padding: 1px 6px; white-space: nowrap; letter-spacing: 0;
+    }
+    .hero-dl-row { margin-top: 22px; display: flex; justify-content: center; }
+    .hero-dl-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; color: var(--dk-text-mute);
+      text-decoration: none; padding: 7px 16px;
+      border: 1px solid var(--dk-border); border-radius: 99px;
+      transition: color 0.18s, border-color 0.18s, background 0.18s;
+    }
+    .hero-dl-link:hover { color: var(--kbx-yellow); border-color: rgba(255,255,0,0.3); background: rgba(255,255,0,0.04); }
+    .dl-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .dl-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: var(--lt-card); border: 1px solid var(--lt-border);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .dl-card-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .dl-card-icon {
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      background: var(--lt-bg); border: 1px solid var(--lt-border);
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
+    }
+    .dl-card-name { font-size: 12.5px; font-weight: 700; color: var(--lt-text); line-height: 1.3; }
+    .dl-card-meta { font-size: 11px; color: var(--lt-text-mute); margin-top: 3px; line-height: 1.4; }
+    .dl-card-meta code { font-size: 10px; background: var(--lt-bg); border: 1px solid var(--lt-border); border-radius: 3px; padding: 0 4px; }
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+      background: var(--kbx-yellow); color: var(--kbx-black);
+      font-family: 'Nunito Sans', sans-serif; font-size: 11.5px; font-weight: 800;
+      padding: 7px 13px; border-radius: 7px; text-decoration: none; white-space: nowrap;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-dl:hover { background: var(--kbx-mint); transform: translateY(-1px); }
+    .dl-changelog { font-size: 11.5px; color: var(--lt-text-mute); text-align: right; margin-bottom: 22px; }
+    .dl-changelog a {
+      color: var(--kbx-teal); font-weight: 600; text-decoration: none;
+      border-bottom: 1px dashed rgba(13,105,135,0.3);
+    }
+    .dl-changelog a:hover { border-bottom-style: solid; }
+
+    /* ── CTA ────────────────────────────────────────────────────── */
+    .cta {
+      background: var(--dk-bg); padding: 130px 0;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-decos { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .cta-deco {
+      position: absolute; border-radius: 99px; border: 1px solid;
+      padding: 5px 13px; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .cta-deco.ex  { background: var(--existing-bg); border-color: var(--existing-border); color: var(--kbx-black); opacity: 0.12; }
+    .cta-deco.mod { background: var(--modified-bg); border-color: var(--modified-border); color: var(--kbx-black); opacity: 0.1; }
+    .cta-deco.bes { background: var(--bespoke-bg);  border-color: var(--bespoke-border);  color: var(--kbx-black); opacity: 0.12; }
+
+    /* ── Figma collaboration cursors ── */
+    .figma-cursor {
+      position: absolute; pointer-events: none; z-index: 3;
+      display: flex; align-items: flex-start; opacity: 0;
+    }
+    .cursor-svg path { fill: var(--cursor-color); stroke: rgba(0,0,0,0.18); stroke-width: 0.75; stroke-linejoin: round; }
+    .hero-cursors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+    .cursor-label {
+      background: var(--cursor-color);
+      color: var(--label-text, #fff); font-family: 'Nunito Sans', sans-serif;
+      font-size: 11px; font-weight: 700; line-height: 1.4;
+      padding: 3px 8px 3px 7px;
+      border-radius: 0 6px 6px 6px;
+      margin-top: 15px; margin-left: -1px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+    }
+
+    .cta-content { position: relative; z-index: 2; padding: 0 28px; }
+    .cta-heading {
+      font-family: 'Domine', serif; font-size: clamp(28px,4.5vw,52px);
+      font-weight: 400; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px;
+    }
+    .cta-heading .hl { color: var(--kbx-yellow); }
+    .cta-sub { font-size: 16px; color: var(--dk-text-mute); margin-bottom: 44px; }
+    .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    /* ── FOOTER ─────────────────────────────────────────────────── */
+    footer {
+      background: var(--dk-card); border-top: 1px solid var(--dk-border);
+      padding: 28px 32px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .footer-mark { width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .footer-mark svg { display: block; width: 100%; height: 100%; }
+    .footer-wordmark { font-family: 'Domine', serif; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.7); line-height: 1.2; }
+    .footer-wordmark span { display: block; font-family: 'Nunito Sans', sans-serif; font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.3); letter-spacing: 0.08em; text-transform: uppercase; }
+    .footer-meta { font-size: 12px; color: var(--dk-text-mute); }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .plug-inner { grid-template-columns: 1fr; gap: 40px; }
+      .plug-ui { max-width: 480px; }
+      /* 2-column feature grid — parent already has 28px h-padding so strip the grid's own */
+      .features-grid { grid-template-columns: repeat(2,1fr); max-width: none; margin: 0; padding: 0; }
+      .hiw-flow { grid-template-columns: 1fr; gap: 12px; }
+      .hiw-arrow { transform: rotate(90deg); }
+      .amock-cards { grid-template-columns: repeat(2,1fr); }
+      .hero-mockup { max-width: 100%; }
+      .step-body-inner { padding-left: 24px; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 620px) {
+      /* 1-column on small phones + tighter section padding */
+      .features-grid { grid-template-columns: 1fr; }
+      .features-transition { padding: 60px 16px 40px; }
+      .features { padding-bottom: 60px; }
+    }
+    @media (max-width: 580px) {
+      .nav { padding: 0 20px; }
+      .hero { padding: 96px 20px 60px; }
+      .hero-ctas { flex-direction: column; }
+      .btn-primary, .btn-ghost { width: 100%; justify-content: center; }
+      .amock-stats-bar { flex-wrap: wrap; }
+      .amock-stats-bar .amock-stat { min-width: 45%; border-bottom: 1px solid #E2E2DE; }
+      footer { flex-direction: column; text-align: center; }
+      .prereq { padding: 20px; }
+      .step-header { padding: 16px 18px; gap: 10px; }
+      .step-num { width: 34px; height: 34px; font-size: 14px; }
+      .dl-cards { grid-template-columns: 1fr; }
+      .dl-changelog { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ══════════════════════════════ -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-brand">
+    <div class="nav-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+    </div>
+    <div class="nav-wordmark">Design &rarr; Dev<span>Handover</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#setup" class="nav-link">Setup Guide</a>
+  </div>
+  <div class="nav-right">
+    <a href="#setup" class="btn-nav">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1h2v8h8v4h-2v-2h-8V5h-2V3h2zM8 7V5h2v2zM6 9V7h2v2zm-2 2V9h2v2zm10 8v2h-2v2h-2v-8H2v-4h2v2h8v6zm2-2v2h-2v-2zm2-2v2h-2v-2zm0 0h2v-2h-2z"/></svg>
+      Get Started
+    </a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═════════════════════════════ -->
+<section class="hero grid-dk" id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Kubix Internal Tool
+    </div>
+    <h1 class="hero-headline">
+      Streamline the <span class="hl">Design&nbsp;&rarr;&nbsp;Dev</span> Handover
+    </h1>
+    <p class="hero-sub">
+      Designers can document every frame, status every section, and share a breakdown with their dev &mdash; all from inside Figma.
+    </p>
+    <div class="hero-ctas">
+      <a href="#setup" class="btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1h2v8h8v4h-2v-2h-8V5h-2V3h2zM8 7V5h2v2zM6 9V7h2v2zm-2 2V9h2v2zm10 8v2h-2v2h-2v-8H2v-4h2v2h8v6zm2-2v2h-2v-2zm2-2v2h-2v-2zm0 0h2v-2h-2z"/></svg>
+        Get started in 10 minutes
+      </a>
+      <a href="#features" class="btn-ghost">
+        See how it works
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </a>
+    </div>
+    <div class="hero-dl-row">
+      <a href="https://github.com/kbx-ali/design-to-dev-handover/releases" target="_blank" rel="noopener" class="hero-dl-link">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8l-3-3m3 3l3-3M4 20h16"/></svg>
+        <span class="version-tag">v—</span>&thinsp;· Download latest release
+      </a>
+    </div>
+  </div>
+
+  <!-- Hero mockup -->
+  <div class="hero-mockup">
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="bdots"><span></span><span></span><span></span></div>
+        <div class="burl">design-dev</div>
+      </div>
+      <div class="amock">
+        <div class="amock-hdr">
+          <div class="amock-back">
+            <svg width="8" height="8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Projects
+          </div>
+          <div class="amock-logo">
+            <div class="amock-logo-mark">
+              <svg width="26" height="26" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+            </div>
+            <div class="amock-logo-textblock">
+              <span class="amock-logo-title">Design &rarr; Dev</span>
+              <span class="amock-logo-sub">Handover</span>
+            </div>
+          </div>
+          <div class="amock-sync"><span class="sync-dot"></span> Saved</div>
+          <div class="amock-hdr-btns">
+            <div class="amock-hdr-btn"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></div>
+            <div class="amock-hdr-btn"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          </div>
+        </div>
+        <div class="amock-meta">
+          <div class="amock-pill"><span class="amock-pill-lbl">Project</span><span class="amock-pill-val">Project Name here...</span></div>
+          <div class="amock-pill"><span class="amock-pill-lbl">Base Theme</span><span class="amock-pill-val">Dawn</span></div>
+          <div class="amock-loom"><span class="amock-loom-dot"></span>Loom</div>
+          <div class="amock-share">
+            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11V3h-8v2h4v2h-2v2h-2v2h-2v2H9v2h2v-2h2v-2h2V9h2V7h2v4zM11 5H3v16h16v-8h-2v6H5V7h6z"/></svg>
+            Share Link
+          </div>
+        </div>
+        <div class="amock-tabs-wrap">
+          <button class="amock-tab on"><span class="amock-tab-dot"></span>Homepage <span style="font-size:7px;background:rgba(0,0,0,0.1);border-radius:99px;padding:1px 5px;">8</span></button>
+          <button class="amock-tab">Collection <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">6</span></button>
+          <button class="amock-tab">Product <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">7</span></button>
+        </div>
+        <div class="amock-body">
+          <div class="amock-stats-bar">
+            <div class="amock-stat"><div class="amock-stat-n">24</div><div class="amock-stat-l">Sections</div></div>
+            <div class="amock-stat"><div class="amock-stat-n">11</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#94F7A1;"></span>Existing</div></div>
+            <div class="amock-stat"><div class="amock-stat-n">7</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#FFFF00;"></span>Modified</div></div>
+            <div class="amock-stat"><div class="amock-stat-n">6</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#E591E5;"></span>Bespoke</div></div>
+          </div>
+          <div class="amock-cards">
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">1</span><span class="amock-card-name">Navigation</span><span class="badge ex" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Existing</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Nav Bar</span><span class="amock-chip"><span class="amock-chip-dot"></span>Mobile Menu</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">2</span><span class="amock-card-name">Hero Banner</span><span class="badge mod" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Modified</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Hero CTA</span><span class="amock-chip"><span class="amock-chip-dot"></span>Background</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">3</span><span class="amock-card-name">Product Grid</span><span class="badge bes" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Bespoke</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Card Layout</span><span class="amock-chip"><span class="amock-chip-dot"></span>Filter Bar</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Figma collaboration cursors — hero -->
+  <div class="hero-cursors">
+    <div class="figma-cursor" id="hero-cursor-ali">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Ali</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-elodie">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Elodie</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-kel">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Kel</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-lucy">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Lucy</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-alec">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Alec</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-nate">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Nate</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-tom">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Tom</span>
+    </div>
+    <div class="figma-cursor" id="hero-cursor-mell">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/></svg>
+      <span class="cursor-label">Mell</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FEATURES ══════════════════════════════ -->
+<section class="features" id="features">
+  <div class="features-transition">
+    <div class="features-hdr">
+      <div class="section-label lbl-teal"><span class="lbl-dot"></span>What it does</div>
+      <h2 class="features-heading">Everything your devs need.<br>Nothing they don't.</h2>
+      <p class="features-sub">Three tools, one workflow. Structured by design, readable by anyone.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon yl">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#0D6987" d="M8 6h8v2H8zm-4 4V8h4v2zm-2 2v-2h2v2zm0 2v-2H0v2zm2 2H2v-2h2zm4 2H4v-2h4zm8 0v2H8v-2zm4-2v2h-4v-2zm2-2v2h-2v-2zm0-2h2v2h-2zm-2-2h2v2h-2zm0 0V8h-4v2zm-10 1h4v4h-4z"/></svg>
+        </div>
+        <h3 class="feat-title">Status at a glance</h3>
+        <p class="feat-desc">Three statuses. Instantly legible. Every component gets tagged so developers know exactly what's new, what's a restyle, and what's a full build.</p>
+        <div class="badge-stack">
+          <div class="badge-row"><span class="badge-row-lbl">Existing</span><span class="badge ex"><span class="badge-dot"></span>Existing Section</span></div>
+          <div class="badge-row"><span class="badge-row-lbl">Modified</span><span class="badge mod"><span class="badge-dot"></span>Need New Settings</span></div>
+          <div class="badge-row"><span class="badge-row-lbl">Bespoke</span><span class="badge bes"><span class="badge-dot"></span>Custom-Dev</span></div>
+        </div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon or">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#E591E5" d="M13 4h-2v16h2zM4 6h5v2H4v8h5v2H2V6zm11 0h7v12h-7v-2h5V8h-5z"/></svg>
+        </div>
+        <h3 class="feat-title">All the links!</h3>
+        <p class="feat-desc">Attach a Loom walkthrough to each page of the project if needed. Developers can watch your intent before they read a single line &mdash; no more lost context. Every section has jump links directly to the section of the Figma file.</p>
+        <div class="loom-preview">
+          <span class="loom-rdot"></span>
+          <span class="loom-txt">loom.com/share/homepage-walkthrough</span>
+          <span class="loom-badge-sm">Attached</span>
+        </div>
+        <div class="figma-link-preview">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4z" fill="#0ACF83"/><path d="M4 12c0-2.208 1.792-4 4-4h4v8H8c-2.208 0-4-1.792-4-4z" fill="#A259FF"/><path d="M4 4c0-2.208 1.792-4 4-4h4v8H8C5.792 8 4 6.208 4 4z" fill="#F24E1E"/><path d="M12 0h4c2.208 0 4 1.792 4 4s-1.792 4-4 4h-4V0z" fill="#FF7262"/><path d="M20 12c0 2.208-1.792 4-4 4s-4-1.792-4-4 1.792-4 4-4 4 1.792 4 4z" fill="#1ABCFE"/></svg>
+          <span class="figma-link-txt">figma.com/file/abc123/homepage#section-hero</span>
+          <span class="loom-badge-sm">Linked</span>
+        </div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon mt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#94F7A1" d="M9 2H2v2h5v4H2v2h7V7h5v10H9v-3H2v2h5v4H2v2h7v-3h7v-6h6v-2h-6V5H9z"/></svg>
+        </div>
+        <h3 class="feat-title">Export Task Breakdown</h3>
+        <p class="feat-desc">Our Figma plugin lets you select frames, assign statuses, and add notes. Push everything to your handover page in one click and export to Clickup.</p>
+        <div class="cu-mock">
+          <div class="cu-parent">
+            <span class="cu-expand">&#9660;</span>
+            <span class="cu-parent-icon">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </span>
+            <span class="cu-parent-name">HOMEPAGE &mdash; Acme Redesign</span>
+            <span class="cu-parent-count">11</span>
+          </div>
+          <div class="cu-task">
+            <span class="cu-task-status"></span>
+            <span class="cu-task-name">Announcement Bar</span>
+            <span class="cu-tag cu-tag-ex">Existing</span>
+          </div>
+          <div class="cu-task">
+            <span class="cu-task-status"></span>
+            <span class="cu-task-name">Hero Banner</span>
+            <span class="cu-tag cu-tag-mod">Modified</span>
+          </div>
+          <div class="cu-task">
+            <span class="cu-task-status"></span>
+            <span class="cu-task-name">Product Grid</span>
+            <span class="cu-tag cu-tag-bes">Bespoke</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ PLUGIN SHOWCASE ══════════════════════════ -->
+<section class="plug-section" id="plugin">
+  <canvas id="plug-canvas"></canvas>
+  <div class="plug-inner">
+
+    <!-- Left: copy -->
+    <div class="plug-text">
+      <div class="section-label lbl-mint" style="margin-bottom:18px;"><span class="lbl-dot"></span>Our Internal Figma Plugin</div>
+      <h2 class="plug-heading">Tag Sections.<br>Make Notes.<br>One Click Sync.</h2>
+      <p class="plug-desc">The Figma plugin lives right inside your design file. Select frames from your current page, assign statuses, write notes, and export directly to your live handover page.</p>
+      <ul class="plug-bullets">
+        <li class="plug-bullet">
+          <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          Pulls frames directly from your open Figma page
+        </li>
+        <li class="plug-bullet">
+          <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          Three-status tagging: Existing, Modified, Bespoke
+        </li>
+        <li class="plug-bullet">
+          <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          One-click sync to the live Handover web app
+        </li>
+        <li class="plug-bullet">
+          <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          Dark &amp; light mode, because we have taste
+        </li>
+      </ul>
+    </div>
+
+    <!-- Right: Plugin UI mockup -->
+    <div class="plug-ui">
+      <div class="plug-ui-hdr">
+        <div class="plug-ui-brand">
+          <svg width="20" height="20" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+          <div>
+            <div class="plug-ui-brand-name">Design &rarr; Dev</div>
+            <div class="plug-ui-brand-page">Homepage</div>
+          </div>
+        </div>
+        <div class="plug-ui-hdr-icons">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+      <div class="plug-ui-body">
+        <div>
+          <div class="plug-ui-lbl">Project Name</div>
+          <div class="plug-ui-input">Ruffingtons</div>
+        </div>
+        <div>
+          <div class="plug-ui-lbl">This Figma page is the&hellip;</div>
+          <div class="plug-ui-select">Homepage <span style="opacity:0.4">&#9660;</span></div>
+        </div>
+        <div>
+          <div class="plug-ui-frames-hdr">
+            <span class="plug-ui-lbl" style="margin:0">Frames (3)</span>
+            <span class="plug-ui-refresh">
+              <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Refresh
+            </span>
+          </div>
+          <div class="plug-ui-frames">
+            <div class="plug-ui-frame">
+              <div class="plug-ui-frame-name">
+                <span class="plug-ui-fdot" style="background:var(--modified-dot)"></span>Hero Banner
+              </div>
+              <div class="plug-ui-frame-btns">
+                <span class="plug-ui-fbtn">Existing</span>
+                <span class="plug-ui-fbtn a-mod">Modified</span>
+                <span class="plug-ui-fbtn">Bespoke</span>
+              </div>
+              <div class="plug-ui-notes">New CTA colours per brand refresh. Yellow &rarr; mint on mobile.</div>
+            </div>
+            <div class="plug-ui-frame">
+              <div class="plug-ui-frame-name">
+                <span class="plug-ui-fdot" style="background:var(--bespoke-dot)"></span>Product Grid
+              </div>
+              <div class="plug-ui-frame-btns">
+                <span class="plug-ui-fbtn">Existing</span>
+                <span class="plug-ui-fbtn">Modified</span>
+                <span class="plug-ui-fbtn a-bes">Bespoke</span>
+              </div>
+            </div>
+            <div class="plug-ui-frame">
+              <div class="plug-ui-frame-name">
+                <span class="plug-ui-fdot" style="background:var(--existing-dot)"></span>Navigation
+              </div>
+              <div class="plug-ui-frame-btns">
+                <span class="plug-ui-fbtn a-ex">Existing</span>
+                <span class="plug-ui-fbtn">Modified</span>
+                <span class="plug-ui-fbtn">Bespoke</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="plug-ui-open">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Open in Handover
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════ HOW IT WORKS ═══════════════════════════ -->
+<section class="how-it-works grid-dk" id="how-it-works">
+  <div class="hiw-inner">
+    <div class="hiw-hdr">
+      <div class="section-label lbl-mint"><span class="lbl-dot"></span>How it works</div>
+      <h2 class="hiw-heading">Figma &rarr; Plugin &rarr; Shareable link.</h2>
+      <p class="hiw-sub">Three steps. No coding. Your devs get a polished, structured brief.</p>
+    </div>
+    <div class="hiw-flow">
+      <div class="hiw-card">
+        <div class="hiw-card-icon figma">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4z" fill="#0ACF83"/><path d="M4 12c0-2.208 1.792-4 4-4h4v8H8c-2.208 0-4-1.792-4-4z" fill="#A259FF"/><path d="M4 4c0-2.208 1.792-4 4-4h4v8H8C5.792 8 4 6.208 4 4z" fill="#F24E1E"/><path d="M12 0h4c2.208 0 4 1.792 4 4s-1.792 4-4 4h-4V0z" fill="#FF7262"/><path d="M20 12c0 2.208-1.792 4-4 4s-4-1.792-4-4 1.792-4 4-4 4 1.792 4 4z" fill="#1ABCFE"/></svg>
+        </div>
+        <div class="hiw-card-title">Design in Figma</div>
+        <div class="hiw-card-desc">Work in your Figma file as usual. Name your section frames clearly with a prefix of <code style="font-size:10.5px;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">//</code> — name the section as it is in the Theme to help the dev.</div>
+      </div>
+      <div class="hiw-arrow">&rarr;</div>
+      <div class="hiw-card">
+        <div class="hiw-card-icon plugin">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#FFFF00" d="M3 3h2v2H3zm4 0h2v2H7zm2 16H7v2h2zm2 0h2v2h-2zM5 7H3v2h2zm14 0h2v2h-2zm2 4h-2v2h2zM3 11h2v2H3zm2 4H3v2h2zm12 0h2v2h2v2h-2v2h-2v-2h-2v-2h2zM5 19H3v2h2zm6-16h2v2h-2zm6 0h-2v2h2zm4 0h-2v2h2z"/></svg>
+        </div>
+        <div class="hiw-card-title">Tag in the plugin</div>
+        <div class="hiw-card-desc">Open the Handover plugin. Set each section to Existing, Modified, or Bespoke and add your notes.</div>
+      </div>
+      <div class="hiw-arrow">&rarr;</div>
+      <div class="hiw-card">
+        <div class="hiw-card-icon webapp">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#94F7A1" d="M21 11V3h-8v2h4v2h-2v2h-2v2h-2v2H9v2h2v-2h2v-2h2V9h2V7h2v4zM11 5H3v16h16v-8h-2v6H5V7h6z"/></svg>
+        </div>
+        <div class="hiw-card-title">Share the link</div>
+        <div class="hiw-card-desc">Hit "Open in Handover." Your devs get a clean, read-only brief &mdash; no Figma account needed. You can also export to ClickUp from there.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ SETUP GUIDE ═══════════════════════════ -->
+<section class="setup grid-lt" id="setup">
+  <div class="setup-inner">
+    <div class="setup-hdr">
+      <div class="section-label lbl-orchid"><span class="lbl-dot"></span>Setup guide</div>
+      <h2 class="setup-heading">Up and running<br>in minutes.</h2>
+      <p class="setup-sub">Three steps. No tokens, no hosting, no config. Just install the plugin and sign in.</p>
+    </div>
+
+    <!-- STEP 1: Install the plugin -->
+    <div class="step-card open" data-step="1">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-num sn-yellow">1</div>
+        <div class="step-header-text">
+          <div class="step-title">Install the Figma plugin</div>
+          <div class="step-time">~2 minutes &middot; One-time setup</div>
+        </div>
+        <svg class="step-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <p style="font-size:13px;color:var(--lt-text-mute);margin-bottom:16px;line-height:1.65;">Download the plugin zip, then point Figma to the manifest file. You only need to do this once — it stays installed.</p>
+          <div class="dl-cards">
+            <div class="dl-card">
+              <div class="dl-card-info">
+                <div class="dl-card-icon">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline stroke-linecap="round" stroke-linejoin="round" points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <div class="dl-card-name">Figma Plugin</div>
+                  <div class="dl-card-meta">Design &rarr; Dev Handover &nbsp;&middot;&nbsp; <span class="version-tag">latest</span></div>
+                </div>
+              </div>
+              <a href="https://github.com/kbx-ali/design-to-dev-handover/releases/download/v1.1.0/figma-plugin.zip" class="btn-dl" target="_blank" rel="noopener">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8l-3-3m3 3l3-3M4 20h16"/></svg>
+                Download
+              </a>
+            </div>
+          </div>
+          <div class="dl-changelog">
+            <a href="https://github.com/kbx-ali/design-to-dev-handover/releases" target="_blank" rel="noopener">View release notes &rarr;</a>
+          </div>
+          <ol class="step-instructions">
+            <li class="step-instruction"><span class="sub-num"></span><span>Unzip <code>figma-plugin.zip</code> — you'll get a folder with <code>manifest.json</code>, <code>code.js</code>, and <code>ui.html</code> inside. Keep it somewhere permanent (like your Documents folder).</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Open the <strong>Figma desktop app</strong>. Click the <strong>menu icon</strong> (top left) &rarr; <strong>Plugins</strong> &rarr; <strong>Development</strong> &rarr; <strong>Import plugin from manifest&hellip;</strong></span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Navigate into the unzipped plugin folder and select the <code>manifest.json</code> file.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>To run the plugin: <strong>right-click</strong> anywhere on the Figma canvas &rarr; <strong>Plugins</strong> &rarr; <strong>Development</strong> &rarr; <strong>Design &rarr; Dev Handover</strong>.</span></li>
+          </ol>
+
+          <!-- Figma import mockup -->
+          <div class="step-mockup">
+            <div class="step-mockup-bar">
+              <div class="step-mockup-dots"><span></span><span></span><span></span></div>
+              <span class="step-mockup-url">Figma &mdash; Import plugin from manifest</span>
+            </div>
+            <div class="step-mockup-content">
+              <div class="figma-mock">
+                <div class="figma-ctx-menu">
+                  <div class="figma-ctx-item">Manage plugins in development</div>
+                  <div class="figma-ctx-item">New plugin&hellip;</div>
+                  <div class="figma-ctx-item highlight">Import plugin from manifest&hellip;</div>
+                  <div class="figma-ctx-divider"></div>
+                  <div class="figma-ctx-item">View API documentation</div>
+                  <div class="figma-ctx-item">Show/Hide console</div>
+                  <div class="figma-ctx-item">Use developer VM</div>
+                  <div class="figma-ctx-item">Hot reload plugin</div>
+                </div>
+                <div class="figma-file-picker">
+                  <div class="figma-fp-header">Name</div>
+                  <div class="figma-fp-row">
+                    <div class="figma-fp-icon js">JS</div>
+                    <span>code.js</span>
+                  </div>
+                  <div class="figma-fp-row selected">
+                    <div class="figma-fp-icon json">{}</div>
+                    <span>manifest.json</span>
+                  </div>
+                  <div class="figma-fp-row">
+                    <div class="figma-fp-icon html">H</div>
+                    <span>ui.html</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-success">
+            <span class="step-success-icon">&#10003;</span>
+            <span>The plugin panel will open inside Figma with the yellow Kubix logo and your page's frames listed.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Sign in to the web app -->
+    <div class="step-card" data-step="2">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-num sn-mint">2</div>
+        <div class="step-header-text">
+          <div class="step-title">Sign in to the web app</div>
+          <div class="step-time">30 seconds &middot; Use your Kubix account</div>
+        </div>
+        <svg class="step-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <ol class="step-instructions">
+            <li class="step-instruction"><span class="sub-num"></span><span>Go to <strong><a href="https://kubix-design.netlify.app/handover" target="_blank" rel="noopener">kubix-design.netlify.app/handover</a></strong> in your browser.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Click <strong>"Sign in with Google"</strong> and select your <code>@kubixmedia.co.uk</code> account. Access is restricted to Kubix team members only.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Once signed in, you'll land on the projects dashboard. You're ready to receive your first sync from the plugin.</span></li>
+          </ol>
+
+          <!-- Login screen mockup -->
+          <div class="step-mockup">
+            <div class="step-mockup-bar">
+              <div class="step-mockup-dots"><span></span><span></span><span></span></div>
+              <span class="step-mockup-url">kubix-design.netlify.app/handover</span>
+            </div>
+            <div class="step-mockup-content">
+              <div class="login-mock">
+                <div class="lm-card">
+                  <div class="lm-k">
+                    <!-- Pixel-art Kubix logo mark (same SVG as real app, scaled) -->
+                    <svg width="20" height="20" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="16" y="2" width="1" height="1" fill="currentColor"/><rect x="17" y="2" width="1" height="1" fill="currentColor"/><rect x="18" y="2" width="1" height="1" fill="currentColor"/><rect x="6" y="3" width="1" height="1" fill="currentColor"/><rect x="7" y="3" width="1" height="1" fill="currentColor"/><rect x="8" y="3" width="1" height="1" fill="currentColor"/><rect x="16" y="3" width="1" height="1" fill="currentColor"/><rect x="17" y="3" width="1" height="1" fill="currentColor"/><rect x="18" y="3" width="1" height="1" fill="currentColor"/><rect x="6" y="4" width="1" height="1" fill="currentColor"/><rect x="7" y="4" width="1" height="1" fill="currentColor"/><rect x="8" y="4" width="1" height="1" fill="currentColor"/><rect x="16" y="4" width="1" height="1" fill="currentColor"/><rect x="17" y="4" width="1" height="1" fill="currentColor"/><rect x="18" y="4" width="1" height="1" fill="currentColor"/><rect x="6" y="5" width="1" height="1" fill="currentColor"/><rect x="7" y="5" width="1" height="1" fill="currentColor"/><rect x="8" y="5" width="1" height="1" fill="currentColor"/><rect x="15" y="5" width="1" height="1" fill="currentColor"/><rect x="16" y="5" width="1" height="1" fill="currentColor"/><rect x="17" y="5" width="1" height="1" fill="currentColor"/><rect x="3" y="6" width="1" height="1" fill="currentColor"/><rect x="4" y="6" width="1" height="1" fill="currentColor"/><rect x="5" y="6" width="1" height="1" fill="currentColor"/><rect x="15" y="6" width="1" height="1" fill="currentColor"/><rect x="16" y="6" width="1" height="1" fill="currentColor"/><rect x="17" y="6" width="1" height="1" fill="currentColor"/><rect x="3" y="7" width="1" height="1" fill="currentColor"/><rect x="4" y="7" width="1" height="1" fill="currentColor"/><rect x="5" y="7" width="1" height="1" fill="currentColor"/><rect x="15" y="7" width="1" height="1" fill="currentColor"/><rect x="16" y="7" width="1" height="1" fill="currentColor"/><rect x="17" y="7" width="1" height="1" fill="currentColor"/><rect x="3" y="8" width="1" height="1" fill="currentColor"/><rect x="4" y="8" width="1" height="1" fill="currentColor"/><rect x="5" y="8" width="1" height="1" fill="currentColor"/><rect x="14" y="8" width="1" height="1" fill="currentColor"/><rect x="15" y="8" width="1" height="1" fill="currentColor"/><rect x="16" y="8" width="1" height="1" fill="currentColor"/><rect x="0" y="9" width="1" height="1" fill="currentColor"/><rect x="1" y="9" width="1" height="1" fill="currentColor"/><rect x="2" y="9" width="1" height="1" fill="currentColor"/><rect x="14" y="9" width="1" height="1" fill="currentColor"/><rect x="15" y="9" width="1" height="1" fill="currentColor"/><rect x="16" y="9" width="1" height="1" fill="currentColor"/><rect x="0" y="10" width="1" height="1" fill="currentColor"/><rect x="1" y="10" width="1" height="1" fill="currentColor"/><rect x="2" y="10" width="1" height="1" fill="currentColor"/><rect x="14" y="10" width="1" height="1" fill="currentColor"/><rect x="15" y="10" width="1" height="1" fill="currentColor"/><rect x="16" y="10" width="1" height="1" fill="currentColor"/><rect x="19" y="10" width="1" height="1" fill="currentColor"/><rect x="20" y="10" width="1" height="1" fill="currentColor"/><rect x="21" y="10" width="1" height="1" fill="currentColor"/><rect x="0" y="11" width="1" height="1" fill="currentColor"/><rect x="1" y="11" width="1" height="1" fill="currentColor"/><rect x="2" y="11" width="1" height="1" fill="currentColor"/><rect x="13" y="11" width="1" height="1" fill="currentColor"/><rect x="14" y="11" width="1" height="1" fill="currentColor"/><rect x="15" y="11" width="1" height="1" fill="currentColor"/><rect x="19" y="11" width="1" height="1" fill="currentColor"/><rect x="20" y="11" width="1" height="1" fill="currentColor"/><rect x="21" y="11" width="1" height="1" fill="currentColor"/><rect x="3" y="12" width="1" height="1" fill="currentColor"/><rect x="4" y="12" width="1" height="1" fill="currentColor"/><rect x="5" y="12" width="1" height="1" fill="currentColor"/><rect x="13" y="12" width="1" height="1" fill="currentColor"/><rect x="14" y="12" width="1" height="1" fill="currentColor"/><rect x="15" y="12" width="1" height="1" fill="currentColor"/><rect x="19" y="12" width="1" height="1" fill="currentColor"/><rect x="20" y="12" width="1" height="1" fill="currentColor"/><rect x="21" y="12" width="1" height="1" fill="currentColor"/><rect x="3" y="13" width="1" height="1" fill="currentColor"/><rect x="4" y="13" width="1" height="1" fill="currentColor"/><rect x="5" y="13" width="1" height="1" fill="currentColor"/><rect x="13" y="13" width="1" height="1" fill="currentColor"/><rect x="14" y="13" width="1" height="1" fill="currentColor"/><rect x="15" y="13" width="1" height="1" fill="currentColor"/><rect x="22" y="13" width="1" height="1" fill="currentColor"/><rect x="23" y="13" width="1" height="1" fill="currentColor"/><rect x="24" y="13" width="1" height="1" fill="currentColor"/><rect x="3" y="14" width="1" height="1" fill="currentColor"/><rect x="4" y="14" width="1" height="1" fill="currentColor"/><rect x="5" y="14" width="1" height="1" fill="currentColor"/><rect x="12" y="14" width="1" height="1" fill="currentColor"/><rect x="13" y="14" width="1" height="1" fill="currentColor"/><rect x="14" y="14" width="1" height="1" fill="currentColor"/><rect x="22" y="14" width="1" height="1" fill="currentColor"/><rect x="23" y="14" width="1" height="1" fill="currentColor"/><rect x="24" y="14" width="1" height="1" fill="currentColor"/><rect x="6" y="15" width="1" height="1" fill="currentColor"/><rect x="7" y="15" width="1" height="1" fill="currentColor"/><rect x="8" y="15" width="1" height="1" fill="currentColor"/><rect x="12" y="15" width="1" height="1" fill="currentColor"/><rect x="13" y="15" width="1" height="1" fill="currentColor"/><rect x="14" y="15" width="1" height="1" fill="currentColor"/><rect x="22" y="15" width="1" height="1" fill="currentColor"/><rect x="23" y="15" width="1" height="1" fill="currentColor"/><rect x="24" y="15" width="1" height="1" fill="currentColor"/><rect x="6" y="16" width="1" height="1" fill="currentColor"/><rect x="7" y="16" width="1" height="1" fill="currentColor"/><rect x="8" y="16" width="1" height="1" fill="currentColor"/><rect x="12" y="16" width="1" height="1" fill="currentColor"/><rect x="13" y="16" width="1" height="1" fill="currentColor"/><rect x="14" y="16" width="1" height="1" fill="currentColor"/><rect x="25" y="16" width="1" height="1" fill="currentColor"/><rect x="26" y="16" width="1" height="1" fill="currentColor"/><rect x="27" y="16" width="1" height="1" fill="currentColor"/><rect x="6" y="17" width="1" height="1" fill="currentColor"/><rect x="7" y="17" width="1" height="1" fill="currentColor"/><rect x="8" y="17" width="1" height="1" fill="currentColor"/><rect x="11" y="17" width="1" height="1" fill="currentColor"/><rect x="12" y="17" width="1" height="1" fill="currentColor"/><rect x="13" y="17" width="1" height="1" fill="currentColor"/><rect x="25" y="17" width="1" height="1" fill="currentColor"/><rect x="26" y="17" width="1" height="1" fill="currentColor"/><rect x="27" y="17" width="1" height="1" fill="currentColor"/><rect x="11" y="18" width="1" height="1" fill="currentColor"/><rect x="12" y="18" width="1" height="1" fill="currentColor"/><rect x="13" y="18" width="1" height="1" fill="currentColor"/><rect x="25" y="18" width="1" height="1" fill="currentColor"/><rect x="26" y="18" width="1" height="1" fill="currentColor"/><rect x="27" y="18" width="1" height="1" fill="currentColor"/><rect x="11" y="19" width="1" height="1" fill="currentColor"/><rect x="12" y="19" width="1" height="1" fill="currentColor"/><rect x="13" y="19" width="1" height="1" fill="currentColor"/><rect x="22" y="19" width="1" height="1" fill="currentColor"/><rect x="23" y="19" width="1" height="1" fill="currentColor"/><rect x="24" y="19" width="1" height="1" fill="currentColor"/><rect x="10" y="20" width="1" height="1" fill="currentColor"/><rect x="11" y="20" width="1" height="1" fill="currentColor"/><rect x="12" y="20" width="1" height="1" fill="currentColor"/><rect x="22" y="20" width="1" height="1" fill="currentColor"/><rect x="23" y="20" width="1" height="1" fill="currentColor"/><rect x="24" y="20" width="1" height="1" fill="currentColor"/><rect x="10" y="21" width="1" height="1" fill="currentColor"/><rect x="11" y="21" width="1" height="1" fill="currentColor"/><rect x="12" y="21" width="1" height="1" fill="currentColor"/><rect x="22" y="21" width="1" height="1" fill="currentColor"/><rect x="23" y="21" width="1" height="1" fill="currentColor"/><rect x="24" y="21" width="1" height="1" fill="currentColor"/><rect x="10" y="22" width="1" height="1" fill="currentColor"/><rect x="11" y="22" width="1" height="1" fill="currentColor"/><rect x="12" y="22" width="1" height="1" fill="currentColor"/><rect x="19" y="22" width="1" height="1" fill="currentColor"/><rect x="20" y="22" width="1" height="1" fill="currentColor"/><rect x="21" y="22" width="1" height="1" fill="currentColor"/><rect x="9" y="23" width="1" height="1" fill="currentColor"/><rect x="10" y="23" width="1" height="1" fill="currentColor"/><rect x="11" y="23" width="1" height="1" fill="currentColor"/><rect x="19" y="23" width="1" height="1" fill="currentColor"/><rect x="20" y="23" width="1" height="1" fill="currentColor"/><rect x="21" y="23" width="1" height="1" fill="currentColor"/><rect x="9" y="24" width="1" height="1" fill="currentColor"/><rect x="10" y="24" width="1" height="1" fill="currentColor"/><rect x="11" y="24" width="1" height="1" fill="currentColor"/><rect x="19" y="24" width="1" height="1" fill="currentColor"/><rect x="20" y="24" width="1" height="1" fill="currentColor"/><rect x="21" y="24" width="1" height="1" fill="currentColor"/><rect x="9" y="25" width="1" height="1" fill="currentColor"/><rect x="10" y="25" width="1" height="1" fill="currentColor"/><rect x="11" y="25" width="1" height="1" fill="currentColor"/></svg>
+                    <div class="lm-wordmark-wrap">
+                      <!-- KUBIX wordmark SVG, same paths as real app -->
+                      <svg width="46" height="11" viewBox="0 0 141 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:rgba(255,255,255,0.92);fill:currentColor"><path d="M26.4541 31.1907L14.9187 15.8965L25.451 2.51405C25.9525 1.87679 25.5764 0.857178 24.6987 0.857178H19.0564C18.8056 0.857178 18.3041 1.11208 18.1787 1.36699L8.14802 14.1122V2.00424C8.14802 1.36698 7.64649 0.857178 7.01957 0.857178H1.75345C1.12653 0.857178 0.625 1.36698 0.625 2.00424V31.828C0.625 32.4652 1.12653 32.975 1.75345 32.975H7.01957C7.52111 32.975 8.02264 32.4652 8.02264 31.828V18.1906L18.4295 32.3378C18.5549 32.5927 19.0564 32.8476 19.3072 32.8476H25.7017C26.5794 32.8476 26.9556 31.828 26.4541 31.1907Z"/><path d="M30.3438 1.74934C30.3438 1.23953 30.7198 0.857178 31.2214 0.857178H36.7383C37.2398 0.857178 37.6159 1.23953 37.6159 1.74934V20.3573C37.6159 23.5436 39.9983 26.0926 43.1329 26.0926C46.3929 26.0926 48.7752 23.5436 48.7752 20.3573V1.74934C48.7752 1.23953 49.1513 0.857178 49.6529 0.857178H55.1698C55.6713 0.857178 56.0475 1.23953 56.0475 1.74934V20.7397C56.0475 27.7495 50.2798 33.4848 43.1329 33.4848C35.9861 33.4848 30.3438 27.7495 30.3438 20.7397V1.74934Z"/><path d="M63.3164 1.74934C63.3164 1.23953 63.6925 0.857178 64.1941 0.857178H74.7263C79.9924 0.857178 84.3809 4.55328 84.3809 9.39645C84.3809 12.9651 81.2463 15.5141 79.1147 16.6612C81.497 17.6808 85.1332 19.9749 85.1332 24.1809C85.1332 29.2789 80.6194 32.975 75.3532 32.975H64.1941C63.6925 32.975 63.3164 32.5927 63.3164 32.0829V1.74934ZM73.8486 13.8573C75.604 13.8573 76.9832 12.3278 76.9832 10.5435C76.9832 8.75919 75.4786 7.48467 73.8486 7.48467H70.3379V13.8573H73.8486ZM74.4756 26.475C76.2309 26.475 77.7355 24.9456 77.7355 23.1612C77.7355 21.3769 75.8548 19.9749 73.974 19.9749H70.3379V26.475H74.4756Z"/><path d="M90.9023 1.74934C90.9023 1.23953 91.2785 0.857178 91.78 0.857178H97.1715C97.6731 0.857178 98.0492 1.23953 98.0492 1.74934V32.0829C98.0492 32.5927 97.6731 32.975 97.1715 32.975H91.78C91.2785 32.975 90.9023 32.5927 90.9023 32.0829V1.74934Z"/><path d="M112.469 16.5338L103.316 2.1317C102.939 1.49444 103.316 0.857178 104.068 0.857178H110.713C111.089 0.857178 111.34 1.11208 111.466 1.23953L116.606 9.7788L121.872 1.23953C121.998 1.11208 122.249 0.857178 122.625 0.857178H129.27C130.022 0.857178 130.398 1.49444 130.022 2.1317L120.869 16.5338L130.398 31.7005C130.775 32.3378 130.398 32.975 129.646 32.975H123.377C123.126 32.975 122.75 32.8476 122.625 32.5927L116.732 23.2887H116.606L110.839 32.5927C110.713 32.7201 110.462 32.975 110.086 32.975H103.817C103.065 32.975 102.689 32.3378 103.065 31.7005L112.469 16.5338Z"/><path d="M135.577 32.9793H139.779C140.245 32.9793 140.626 32.5921 140.626 32.119V27.5915C140.626 27.1183 140.245 26.7312 139.779 26.7312H135.577C135.112 26.7312 134.73 27.1183 134.73 27.5915V32.119C134.73 32.5921 135.101 32.9793 135.577 32.9793Z"/></svg>
+                      <span class="lm-app-label">Handover</span>
+                    </div>
+                  </div>
+                  <p class="lm-sub">Sign in with your Kubix Google account to manage design handovers.</p>
+                  <div class="lm-btn-google">
+                    <svg width="10" height="10" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Sign in with Google
+                  </div>
+                  <div class="lm-footer">For Kubix employees only &middot; kubixmedia.co.uk</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Add Figma file URL -->
+    <div class="step-card" data-step="3">
+      <div class="step-header" onclick="toggleStep(this)">
+        <div class="step-num sn-orchid">3</div>
+        <div class="step-header-text">
+          <div class="step-title">Add your Figma file URL</div>
+          <div class="step-time">30 seconds &middot; Final step!</div>
+        </div>
+        <svg class="step-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-body-inner">
+          <p style="font-size:13px;color:var(--lt-text-mute);margin-bottom:16px;line-height:1.65;">The plugin needs to know which Figma file you're working in so it can generate direct jump links to each section.</p>
+          <ol class="step-instructions">
+            <li class="step-instruction"><span class="sub-num"></span><span>In the plugin, click the <strong>gear icon</strong> (top right of the plugin panel) to open Settings.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Switch to your Figma file's browser tab and <strong>copy the full URL</strong> from the address bar.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Paste it into the <strong>"Figma File URL"</strong> field in the plugin settings. Click <strong>Save</strong>.</span></li>
+            <li class="step-instruction"><span class="sub-num"></span><span>Head back to the main view — your frames will be listed. Tag their status, add notes, and hit <strong>"Open in Handover"</strong> to sync everything to the web app.</span></li>
+          </ol>
+
+          <!-- Plugin settings mockup -->
+          <div class="step-mockup">
+            <div class="step-mockup-bar">
+              <div class="step-mockup-dots"><span></span><span></span><span></span></div>
+              <span class="step-mockup-url">Design &rarr; Dev Handover &mdash; Settings</span>
+            </div>
+            <div class="step-mockup-content">
+              <div class="plugin-settings-mock">
+                <div class="psm-field">
+                  <span class="psm-label">Figma File URL (for frame links)</span>
+                  <div class="psm-input">https://www.figma.com/design/&hellip;</div>
+                  <div class="psm-hint">Paste your Figma file URL so section links are always populated, even for draft files where Figma doesn't provide a file key automatically.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-success">
+            <span class="step-success-icon">&#127881;</span>
+            <span><strong>You're all set!</strong> Tag your frames, add notes, and sync to the web app. Your team sees a clean, real-time handover brief at <strong>kubix-design.netlify.app/handover</strong>.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════ BOTTOM CTA ════════════════════════════ -->
+<section class="cta grid-dk">
+  <div class="cta-decos">
+    <div class="cta-deco ex" style="top:12%; left:8%; transform:rotate(-8deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--existing-dot);display:inline-block;"></span> Existing</div>
+    <div class="cta-deco mod" style="top:22%; right:10%; transform:rotate(6deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--modified-dot);display:inline-block;"></span> Modified</div>
+    <div class="cta-deco bes" style="bottom:25%; left:12%; transform:rotate(4deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--bespoke-dot);display:inline-block;"></span> Bespoke</div>
+    <div class="cta-deco ex" style="bottom:14%; right:8%; transform:rotate(-5deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--existing-dot);display:inline-block;"></span> Existing</div>
+    <div class="cta-deco mod" style="top:55%; left:5%; transform:rotate(10deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--modified-dot);display:inline-block;"></span> Modified</div>
+    <div class="cta-deco bes" style="top:48%; right:6%; transform:rotate(-9deg)"><span class="badge-dot" style="width:6px;height:6px;border-radius:50%;background:var(--bespoke-dot);display:inline-block;"></span> Bespoke</div>
+    <!-- Figma collaboration cursors -->
+    <div class="figma-cursor" id="cursor-ali">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/>
+      </svg>
+      <span class="cursor-label">Ali</span>
+    </div>
+    <div class="figma-cursor" id="cursor-elodie">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/>
+      </svg>
+      <span class="cursor-label">Elodie</span>
+    </div>
+    <div class="figma-cursor" id="cursor-kel">
+      <svg class="cursor-svg" width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5.5 20.5L0 0L19 9.5L10 12.5L5.5 20.5Z"/>
+      </svg>
+      <span class="cursor-label">Kel</span>
+    </div>
+  </div>
+  <div class="cta-content">
+    <h2 class="cta-heading">Ready to <span class="hl">hand it over?</span></h2>
+    <p class="cta-sub">Get the files, follow the guide, and share your first brief today.</p>
+    <div class="cta-btns">
+      <a href="#setup" class="btn-primary" style="font-size:15px; padding:15px 28px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1h2v8h8v4h-2v-2h-8V5h-2V3h2zM8 7V5h2v2zM6 9V7h2v2zm-2 2V9h2v2zm10 8v2h-2v2h-2v-8H2v-4h2v2h8v6zm2-2v2h-2v-2zm2-2v2h-2v-2zm0 0h2v-2h-2z"/></svg>
+        Start the setup guide
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FOOTER ════════════════════════════════ -->
+<footer>
+  <a href="#" class="footer-brand">
+    <div class="footer-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+    </div>
+    <span class="footer-wordmark">Design &rarr; Dev<span>Handover</span></span>
+  </a>
+  <span class="footer-meta">Built with <img src="love-emoji.png" width="13" height="13" alt="love" style="display:inline-block;vertical-align:middle;margin:0 1px -1px;image-rendering:pixelated"> by Kubix &middot; An Internal Tool &middot; <span id="footer-year"></span></span>
+</footer>
+
+<!-- ═══════════════════════════ JS ══════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  /* ── Step accordion ── */
+  function toggleStep(header) {
+    const card = header.closest('.step-card');
+    card.classList.toggle('open');
+  }
+
+  /* ── GSAP ── */
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* Nav — transparent absolute → sticky slide-in */
+  ScrollTrigger.create({
+    trigger: '#hero',
+    start: 'bottom 64px',
+    onEnter() {
+      const nav = document.getElementById('nav');
+      gsap.set(nav, { y: -72 });
+      nav.classList.add('sticky');
+      gsap.to(nav, { y: 0, duration: 0.42, ease: 'power3.out' });
+    },
+    onLeaveBack() {
+      const nav = document.getElementById('nav');
+      gsap.to(nav, {
+        y: -72, duration: 0.28, ease: 'power2.in',
+        onComplete() {
+          nav.classList.remove('sticky');
+          gsap.set(nav, { y: 0 });
+        }
+      });
+    }
+  });
+
+  /* Hero entrance */
+  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  heroTl
+    .to('.hero-badge',    { opacity: 1, y: 0, duration: 0.7, delay: 0.2 })
+    .fromTo('.hero-headline', { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.75 }, '-=0.35')
+    .fromTo('.hero-sub',  { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.65 }, '-=0.4')
+    .fromTo('.hero-ctas', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.55 }, '-=0.4')
+    .fromTo('.hero-mockup', { opacity: 0, y: 52, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'power2.out' }, '-=0.3');
+
+  /* Floating orbs */
+  gsap.to('.orb-1', { x: 40, y: -30, duration: 9,  repeat: -1, yoyo: true, ease: 'sine.inOut' });
+  gsap.to('.orb-2', { x: -30, y: 40, duration: 11, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 1 });
+  gsap.to('.orb-3', { x: 20, y: 30,  duration: 7,  repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 2 });
+
+  /* Feature cards */
+  gsap.utils.toArray('.feat-card').forEach((card, i) => {
+    gsap.to(card, {
+      opacity: 1, y: 0, duration: 0.7, ease: 'power2.out', delay: i * 0.12,
+      scrollTrigger: { trigger: card, start: 'top 82%', once: true }
+    });
+  });
+
+  /* Badge rows */
+  gsap.utils.toArray('.badge-row').forEach((row, i) => {
+    gsap.fromTo(row,
+      { opacity: 0, scale: 0.85, x: -10 },
+      { opacity: 1, scale: 1, x: 0, duration: 0.45, ease: 'back.out(1.4)', delay: i * 0.1,
+        scrollTrigger: { trigger: row, start: 'top 85%', once: true }
+      }
+    );
+  });
+
+  /* How it works cards */
+  gsap.utils.toArray('.hiw-card').forEach((card, i) => {
+    gsap.to(card, {
+      opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: i * 0.15,
+      scrollTrigger: { trigger: '.hiw-flow', start: 'top 78%', once: true }
+    });
+  });
+
+  /* Setup step cards */
+  gsap.utils.toArray('.step-card').forEach((card, i) => {
+    gsap.to(card, {
+      opacity: 1, y: 0, duration: 0.55, ease: 'power2.out', delay: i * 0.08,
+      scrollTrigger: { trigger: card, start: 'top 85%', once: true }
+    });
+  });
+
+  /* Plug bullets — stagger slide + checkmark draw on scroll in/out */
+  (function () {
+    const bullets = gsap.utils.toArray('.plug-bullet');
+    if (!bullets.length) return;
+
+    bullets.forEach((bullet, i) => {
+      const chk  = bullet.querySelector('.plug-bullet-chk');
+      const path = bullet.querySelector('svg path');
+      const len  = (path && path.getTotalLength) ? path.getTotalLength() : 28;
+
+      if (path) {
+        path.style.strokeDasharray  = len;
+        path.style.strokeDashoffset = len;
+        path.style.transition = 'none'; /* let GSAP own this property */
+      }
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: '.plug-bullets',
+          start: 'top 82%',
+          toggleActions: 'play reverse play reverse',
+        },
+        delay: i * 0.1,
+      });
+
+      tl.fromTo(bullet,
+          { x: -22, opacity: 0 },
+          { x: 0,   opacity: 1, duration: 0.45, ease: 'power2.out' }
+        )
+        .fromTo(chk,
+          { scale: 0 },
+          { scale: 1, duration: 0.32, ease: 'back.out(2.5)', transformOrigin: 'center center' },
+          '-=0.2'
+        );
+
+      if (path) {
+        tl.fromTo(path,
+          { strokeDashoffset: len },
+          { strokeDashoffset: 0, duration: 0.3, ease: 'power2.inOut' },
+          '-=0.18'
+        );
+      }
+    });
+  })();
+
+  /* Plug UI mockup — cycling status interaction demo */
+  (function () {
+    const plugUi = document.querySelector('#plugin .plug-ui');
+    if (!plugUi) return;
+    const frames  = plugUi.querySelectorAll('.plug-ui-frame');
+    const openBtn = plugUi.querySelector('.plug-ui-open');
+    if (!frames.length || !openBtn) return;
+
+    const MINT   = '#94F7A1';
+    const ORCHID = '#E591E5';
+
+    const dotColors = { 'a-ex': '#2EAB42', 'a-mod': '#999900', 'a-bes': '#9E1FA0' };
+    const btnOrder  = ['a-ex', 'a-mod', 'a-bes'];
+
+    /* Initial HTML states  frame[0]=a-mod  frame[1]=a-bes  frame[2]=a-ex */
+    const INITIAL = [{ i: 0, s: 'a-mod' }, { i: 1, s: 'a-bes' }, { i: 2, s: 'a-ex' }];
+
+    function activateBtn(frameEl, cls, animate) {
+      const btns = frameEl.querySelectorAll('.plug-ui-fbtn');
+      btns.forEach(b => b.classList.remove('a-ex', 'a-mod', 'a-bes'));
+      const target = btns[btnOrder.indexOf(cls)];
+      if (target) {
+        target.classList.add(cls);
+        if (animate) gsap.fromTo(target, { scale: 0.8 }, { scale: 1, duration: 0.26, ease: 'back.out(3)' });
+      }
+      const dot = frameEl.querySelector('.plug-ui-fdot');
+      if (dot) dot.style.background = dotColors[cls] || '';
+    }
+
+    function setOpenBtn(dirty, animate) {
+      /* update the trailing text node (after the SVG) */
+      const tn = Array.from(openBtn.childNodes).filter(n => n.nodeType === 3 && n.nodeValue.trim())[0];
+      if (tn) tn.nodeValue = dirty ? ' Sync Changes With Handover' : ' Open in Handover';
+      if (animate) gsap.to(openBtn,  { backgroundColor: dirty ? ORCHID : MINT, duration: 0.38, ease: 'power2.inOut' });
+      else         gsap.set(openBtn, { backgroundColor: dirty ? ORCHID : MINT });
+    }
+
+    function resetAll(animate) {
+      INITIAL.forEach(({ i, s }) => activateBtn(frames[i], s, false));
+      setOpenBtn(false, animate);
+    }
+
+    function buildLoop() {
+      return gsap.timeline({ repeat: -1 })
+        /* Beat 1 (+1.6s)  Hero Banner: mod → bes  ➜  open btn goes orchid */
+        .call(() => { activateBtn(frames[0], 'a-bes', true); setOpenBtn(true, true); }, [], 1.6)
+        /* Beat 2 (+2.0s)  Navigation: ex → mod */
+        .call(() => { activateBtn(frames[2], 'a-mod', true); }, [], '+=2.0')
+        /* Beat 3 (+2.0s)  Product Grid: bes → ex */
+        .call(() => { activateBtn(frames[1], 'a-ex',  true); }, [], '+=2.0')
+        /* Hold dirty for 2.2s, then reset & breathe before next loop */
+        .call(() => { resetAll(true); }, [], '+=2.2')
+        .to({}, { duration: 1.4 });
+    }
+
+    let loopTl = null;
+    ScrollTrigger.create({
+      trigger: '#plugin',
+      start: 'top 65%',
+      end:   'bottom 10%',
+      onEnter()     { loopTl ? loopTl.play() : (loopTl = buildLoop()); },
+      onLeave()     { loopTl && loopTl.pause(); },
+      onEnterBack() { loopTl && loopTl.play(); },
+      onLeaveBack() { if (loopTl) { loopTl.pause(); resetAll(false); } },
+    });
+  })();
+
+  /* CTA */
+  gsap.fromTo('.cta-content',
+    { opacity: 0, y: 40 },
+    { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
+      scrollTrigger: { trigger: '.cta', start: 'top 75%', once: true }
+    }
+  );
+
+  /* CTA deco badges float */
+  gsap.utils.toArray('.cta-deco').forEach((el, i) => {
+    gsap.to(el, {
+      y: (i % 2 === 0) ? -12 : 12,
+      x: (i % 3 === 0) ? 8 : -8,
+      duration: 5 + (i * 0.7),
+      repeat: -1, yoyo: true, ease: 'sine.inOut', delay: i * 0.4
+    });
+  });
+
+  /* ── Figma collaboration cursors ── */
+  (function() {
+    // Palettes — shuffled fresh each load
+    const designerPalette = ['#FFFF00','#E591E5','#94F7A1'].sort(() => Math.random() - 0.5);
+    const devPool         = ['#FFFFFF','#541A80','#FFF9BD','#0D6987'].sort(() => Math.random() - 0.5);
+    // 5 devs, cycle through the 4 dev colors
+    const devPalette = [devPool[0], devPool[1], devPool[2], devPool[3], devPool[0]];
+
+    // Colors that need dark label text
+    const lightColors = new Set(['#FFFF00','#94F7A1','#FFFFFF','#FFF9BD']);
+
+    function applyColor(id, color) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.setProperty('--cursor-color', color);
+      el.style.setProperty('--label-text', lightColors.has(color) ? '#000' : '#fff');
+    }
+
+    // CTA cursors — designers only
+    applyColor('cursor-ali',    designerPalette[0]);
+    applyColor('cursor-elodie', designerPalette[1]);
+    applyColor('cursor-kel',    designerPalette[2]);
+
+    // Hero cursors — designers
+    applyColor('hero-cursor-ali',    designerPalette[0]);
+    applyColor('hero-cursor-elodie', designerPalette[1]);
+    applyColor('hero-cursor-kel',    designerPalette[2]);
+
+    // Hero cursors — developers
+    ['lucy','alec','nate','tom','mell'].forEach((name, i) => {
+      applyColor('hero-cursor-' + name, devPalette[i]);
+    });
+
+    // ── CTA waypoints (% of .cta-decos, hug edges away from center text) ──
+    const ctaPaths = {
+      'cursor-ali':    [{x:8,y:14},{x:13,y:33},{x:7,y:52},{x:15,y:71},{x:9,y:84},{x:17,y:60},{x:11,y:38},{x:6,y:20}],
+      'cursor-elodie': [{x:80,y:18},{x:87,y:42},{x:76,y:62},{x:83,y:78},{x:90,y:54},{x:78,y:30},{x:85,y:12}],
+      'cursor-kel':    [{x:38,y:9},{x:58,y:15},{x:69,y:21},{x:73,y:11},{x:55,y:7},{x:42,y:17},{x:63,y:24}]
+    };
+
+    // ── Hero waypoints (% of .hero-cursors, scatter around edges/corners) ──
+    const heroPaths = {
+      'hero-cursor-ali':    [{x:6,y:12},{x:11,y:30},{x:5,y:52},{x:13,y:70},{x:8,y:86},{x:15,y:65},{x:7,y:40}],
+      'hero-cursor-elodie': [{x:83,y:10},{x:89,y:32},{x:79,y:55},{x:86,y:74},{x:92,y:46},{x:81,y:22},{x:87,y:6}],
+      'hero-cursor-kel':    [{x:22,y:8},{x:17,y:22},{x:24,y:38},{x:19,y:55},{x:14,y:70},{x:21,y:82},{x:16,y:92}],
+      'hero-cursor-lucy':   [{x:74,y:8},{x:80,y:26},{x:87,y:44},{x:82,y:62},{x:76,y:80},{x:70,y:56},{x:78,y:34}],
+      'hero-cursor-alec':   [{x:40,y:14},{x:52,y:30},{x:44,y:48},{x:56,y:66},{x:48,y:82},{x:60,y:50},{x:50,y:28}],
+      'hero-cursor-nate':   [{x:89,y:20},{x:94,y:36},{x:88,y:54},{x:93,y:68},{x:96,y:40},{x:90,y:26},{x:95,y:14}],
+      'hero-cursor-tom':    [{x:16,y:24},{x:9,y:36},{x:19,y:50},{x:11,y:62},{x:20,y:42},{x:10,y:28},{x:17,y:54}],
+      'hero-cursor-mell':   [{x:76,y:16},{x:71,y:6},{x:79,y:26},{x:73,y:13},{x:81,y:20},{x:69,y:10},{x:78,y:4}]
+    };
+
+    // Simple looping waypoint animator (for CTA)
+    function animateCursor(el, waypoints, base) {
+      if (!el) return;
+      const start = Math.floor(Math.random() * waypoints.length);
+      gsap.set(el, { left: waypoints[start].x+'%', top: waypoints[start].y+'%' });
+      let i = start + 1;
+      (function step() {
+        const wp = waypoints[i++ % waypoints.length];
+        gsap.to(el, { left: wp.x+'%', top: wp.y+'%',
+          duration: base + (Math.random() * 1.6 - 0.8),
+          ease: 'sine.inOut', onComplete: step });
+      })();
+    }
+
+    // Interruptible stepper (for hero — supports button attraction)
+    function makeStepper(el, waypoints, baseDur, startPos) {
+      if (!el) return null;
+      const sp = startPos || { x: 5 + Math.random() * 88, y: 5 + Math.random() * 85 };
+      let idx = 0, paused = false;
+      gsap.set(el, { left: sp.x.toFixed(1)+'%', top: sp.y.toFixed(1)+'%' });
+      function step() {
+        if (paused) return;
+        idx = (idx + 1) % waypoints.length;
+        gsap.to(el, {
+          left: waypoints[idx].x+'%', top: waypoints[idx].y+'%',
+          duration: baseDur + (Math.random() * 1.8 - 0.9),
+          ease: 'sine.inOut', onComplete: step
+        });
+      }
+      step();
+      return {
+        pause() { paused = true; gsap.killTweensOf(el); },
+        resume() { paused = false; step(); }
+      };
+    }
+
+    // ── CTA: fade in + start when section scrolls into view ──
+    ScrollTrigger.create({
+      trigger: '.cta', start: 'top 78%', once: true,
+      onEnter() {
+        const ctaEls = ['cursor-ali','cursor-elodie','cursor-kel'].map(id => document.getElementById(id));
+        gsap.to(ctaEls.filter(Boolean), { opacity: 0.9, duration: 1.1, stagger: 0.35, ease: 'power2.out', delay: 0.4 });
+        animateCursor(document.getElementById('cursor-ali'),    ctaPaths['cursor-ali'],    4.5);
+        animateCursor(document.getElementById('cursor-elodie'), ctaPaths['cursor-elodie'], 5.3);
+        animateCursor(document.getElementById('cursor-kel'),    ctaPaths['cursor-kel'],    3.9);
+      }
+    });
+
+    // ── Hero: start immediately (hero is the first thing visible) ──
+    const heroIds   = Object.keys(heroPaths);
+    const heroBases = [4.5, 5.8, 3.7, 6.2, 4.1, 5.0, 3.8, 5.5];
+    const steppers  = {};
+
+    // Stagger fade-in after a short delay
+    const heroEls = heroIds.map(id => document.getElementById(id)).filter(Boolean);
+    gsap.to(heroEls, { opacity: 0.88, duration: 1.2, stagger: 0.14, ease: 'power2.out', delay: 1.0 });
+
+    // Divide hero into 8 zones and pick a random point in each, then shuffle.
+    // This guarantees all cursors start spread across the full hero on every load.
+    const heroZones = [
+      { x:[4,40],  y:[4,35]  },  // top-left
+      { x:[58,94], y:[4,35]  },  // top-right
+      { x:[4,25],  y:[40,88] },  // mid-left
+      { x:[73,94], y:[40,88] },  // mid-right
+      { x:[28,52], y:[4,22]  },  // top-centre
+      { x:[28,52], y:[72,92] },  // bottom-centre
+      { x:[4,40],  y:[58,92] },  // bottom-left
+      { x:[58,94], y:[58,92] },  // bottom-right
+    ];
+    const rndInZone = z => ({
+      x: z.x[0] + Math.random() * (z.x[1] - z.x[0]),
+      y: z.y[0] + Math.random() * (z.y[1] - z.y[0])
+    });
+    const heroStarts = heroZones.map(rndInZone).sort(() => Math.random() - 0.5);
+
+    heroIds.forEach((id, i) => {
+      const el = document.getElementById(id);
+      steppers[id] = makeStepper(el, heroPaths[id], heroBases[i], heroStarts[i]);
+    });
+
+    // ── plug-ui-input project name typewriter ──
+    (function() {
+      const el = document.querySelector('.plug-ui-input');
+      if (!el) return;
+      const names = ['Ruffingtons', 'Just Vitamins', 'Sheridans Cheesemongers'];
+      let idx = 0;
+      const PAUSE = 2200, TYPE_SPEED = 55, DELETE_SPEED = 35;
+      function typeOut(text, cb) {
+        let i = 0;
+        el.textContent = '';
+        const t = setInterval(() => {
+          el.textContent = text.slice(0, ++i);
+          if (i === text.length) { clearInterval(t); setTimeout(cb, PAUSE); }
+        }, TYPE_SPEED);
+      }
+      function deleteOut(cb) {
+        const t = setInterval(() => {
+          const cur = el.textContent;
+          if (!cur.length) { clearInterval(t); cb(); return; }
+          el.textContent = cur.slice(0, -1);
+        }, DELETE_SPEED);
+      }
+      function cycle() {
+        idx = (idx + 1) % names.length;
+        deleteOut(() => typeOut(names[idx], cycle));
+      }
+      typeOut(names[0], cycle);
+    })();
+
+    // ── Button attraction — one cursor periodically drifts toward a hero CTA button ──
+    // Target positions as % of hero section (approximated from centered layout)
+    const btnTargets = [
+      { x: 36, y: 66 }, // "Get started in 10 minutes" (left of center)
+      { x: 62, y: 66 }  // "See how it works"          (right of center)
+    ];
+
+    function scheduleAttraction() {
+      setTimeout(function() {
+        const id = heroIds[Math.floor(Math.random() * heroIds.length)];
+        const el = document.getElementById(id);
+        const st = steppers[id];
+        const target = btnTargets[Math.floor(Math.random() * btnTargets.length)];
+        if (el && st) {
+          st.pause();
+          // Add a tiny random offset so each cursor approaches from a slightly different angle
+          const tx = target.x + (Math.random() * 6 - 3);
+          const ty = target.y + (Math.random() * 4 - 2);
+          gsap.to(el, {
+            left: tx.toFixed(1) + '%', top: ty.toFixed(1) + '%',
+            duration: 2.6 + Math.random() * 1.4, ease: 'power1.inOut',
+            onComplete() {
+              // Hover near button briefly, then resume wandering
+              setTimeout(() => st.resume(), 1600 + Math.random() * 1400);
+            }
+          });
+        }
+        scheduleAttraction();
+      }, 5000 + Math.random() * 7000); // every 5–12 s
+    }
+
+    scheduleAttraction();
+  })();
+
+  /* ── Live version from GitHub Releases ── */
+  fetch('https://api.github.com/repos/kbx-ali/design-to-dev-handover/releases/latest')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (d && d.tag_name) {
+        document.querySelectorAll('.version-tag').forEach(el => {
+          el.textContent = d.tag_name;
+        });
+      }
+    })
+    .catch(() => {}); // silent fail — fallback text stays
+
+  /* ── Auto-updating footer year ── */
+  const fyEl = document.getElementById('footer-year');
+  if (fyEl) fyEl.textContent = new Date().getFullYear();
+
+  /* ── Hero canvas — dot-matrix orchid ripple from bottom-center ── */
+  (function initHeroCanvas() {
+    var canvas  = document.getElementById('hero-canvas');
+    var section = document.getElementById('hero');
+    if (!canvas || !section) return;
+
+    var ctx = canvas.getContext('2d');
+    var SPACING     = 22;
+    var RIPPLE_SECS = 2.8;
+    var IDLE_ALPHA  = 0.05;
+    var PEAK_ALPHA  = 0.28;
+    var COLOR       = '229,145,229'; /* orchid */
+
+    var cells = [], w = 0, h = 0, maxDist = 1;
+    var raf = null, rippleTs = null;
+
+    function buildGrid() {
+      w = section.offsetWidth;
+      h = section.offsetHeight;
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.style.width  = w + 'px';
+      canvas.style.height = h + 'px';
+
+      /* Origin: bottom-center — ripple radiates upward and outward */
+      var cx = w / 2;
+      var cy = h;
+      maxDist = Math.hypot(cx, h) || 1; /* farthest corner = top-left/right */
+
+      cells = [];
+      for (var y = 0; y <= h + SPACING; y += SPACING) {
+        for (var x = 0; x <= w + SPACING; x += SPACING) {
+          var dx = x - cx, dy = y - cy;
+          cells.push({ x: x, y: y, nd: Math.sqrt(dx*dx + dy*dy) / maxDist });
+        }
+      }
+    }
+
+    function drawGrid(getAlpha) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.lineWidth = 0.75;
+      var am = {};
+      for (var i = 0; i < cells.length; i++) {
+        var c = cells[i];
+        am[c.x + ',' + c.y] = getAlpha(c);
+      }
+      for (var sy = 0; sy <= h; sy += SPACING) {
+        for (var sx = 0; sx < w; sx += SPACING) {
+          var a = ((am[sx + ',' + sy] || 0) + (am[(sx + SPACING) + ',' + sy] || 0)) * 0.5;
+          if (a < 0.004) continue;
+          ctx.strokeStyle = 'rgba(' + COLOR + ',' + a.toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + SPACING, sy); ctx.stroke();
+        }
+      }
+      for (var vx = 0; vx <= w; vx += SPACING) {
+        for (var vy = 0; vy < h; vy += SPACING) {
+          var va = ((am[vx + ',' + vy] || 0) + (am[vx + ',' + (vy + SPACING)] || 0)) * 0.5;
+          if (va < 0.004) continue;
+          ctx.strokeStyle = 'rgba(' + COLOR + ',' + va.toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(vx, vy); ctx.lineTo(vx, vy + SPACING); ctx.stroke();
+        }
+      }
+    }
+
+    function getAlphaAt(c, elapsed) {
+      var delta = elapsed / RIPPLE_SECS - c.nd;
+      if (delta < 0) return 0;
+      var rise  = Math.min(1, delta / 0.07);
+      var decay = Math.min(1, Math.max(0, (delta - 0.07) / 0.48));
+      return PEAK_ALPHA * rise * (1 - decay) + IDLE_ALPHA * rise * decay;
+    }
+
+    function rippleFrame(ts) {
+      if (!rippleTs) rippleTs = ts;
+      var elapsed = (ts - rippleTs) / 1000;
+      if (elapsed > RIPPLE_SECS + 1.2) { rippleTs = null; raf = requestAnimationFrame(rippleFrame); return; }
+      drawGrid(function(c) { return getAlphaAt(c, elapsed); });
+      raf = requestAnimationFrame(rippleFrame);
+    }
+
+    buildGrid();
+    window.addEventListener('resize', buildGrid);
+
+    function play()  { if (!raf) { rippleTs = null; raf = requestAnimationFrame(rippleFrame); } }
+    function pause() { if (raf)  { cancelAnimationFrame(raf); raf = null; } }
+
+    new IntersectionObserver(function(entries) {
+      entries[0].isIntersecting ? play() : pause();
+    }, { threshold: 0 }).observe(section);
+  })();
+
+  /* ── Plug section canvas — dot-matrix orchid ripple, continuous loop ── */
+  (function initPlugCanvas() {
+    var canvas  = document.getElementById('plug-canvas');
+    var section = document.getElementById('plugin');
+    if (!canvas || !section) return;
+
+    var ctx = canvas.getContext('2d');
+    var SPACING     = 22;
+    var RIPPLE_SECS = 2.6;
+    var BLEED       = 340;    /* px the canvas extends below section into How It Works */
+    var IDLE_ALPHA  = 0.07;
+    var PEAK_ALPHA  = 0.30;
+    var COLOR       = '229,145,229'; /* orchid */
+
+    var cells = [], w = 0, h = 0, maxDist = 1;
+    var raf = null, rippleTs = null;
+
+    function buildGrid() {
+      w = section.offsetWidth;
+      h = section.offsetHeight + BLEED;
+
+      /* Size canvas pixel buffer AND display size — display size must be explicit
+         so the element physically extends below the section for the bleed effect */
+      canvas.width          = w;
+      canvas.height         = h;
+      canvas.style.width    = w + 'px';
+      canvas.style.height   = h + 'px';
+
+      /* Origin: right column centre, always clamped within canvas */
+      var cx = Math.round(Math.min(w * 0.72, w - 10));
+      var cy = Math.round(section.offsetHeight * 0.48);
+
+      maxDist = Math.max(
+        Math.hypot(cx, cy),
+        Math.hypot(w - cx, cy),
+        Math.hypot(cx, h - cy),
+        Math.hypot(w - cx, h - cy)
+      ) || 1;
+
+      cells = [];
+      for (var y = 0; y <= h + SPACING; y += SPACING) {
+        for (var x = 0; x <= w + SPACING; x += SPACING) {
+          var dx = x - cx, dy = y - cy;
+          cells.push({ x: x, y: y, nd: Math.sqrt(dx*dx + dy*dy) / maxDist });
+        }
+      }
+    }
+
+    function drawGrid(getAlpha) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.lineWidth = 0.75;
+
+      /* Build alpha lookup by key "x,y" */
+      var am = {};
+      for (var i = 0; i < cells.length; i++) {
+        var c = cells[i];
+        am[c.x + ',' + c.y] = getAlpha(c);
+      }
+
+      /* Horizontal segments */
+      for (var sy = 0; sy <= h; sy += SPACING) {
+        for (var sx = 0; sx < w; sx += SPACING) {
+          var a = ((am[sx + ',' + sy] || 0) + (am[(sx + SPACING) + ',' + sy] || 0)) * 0.5;
+          if (a < 0.004) continue;
+          ctx.strokeStyle = 'rgba(' + COLOR + ',' + a.toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + SPACING, sy); ctx.stroke();
+        }
+      }
+
+      /* Vertical segments */
+      for (var vx = 0; vx <= w; vx += SPACING) {
+        for (var vy = 0; vy < h; vy += SPACING) {
+          var va = ((am[vx + ',' + vy] || 0) + (am[vx + ',' + (vy + SPACING)] || 0)) * 0.5;
+          if (va < 0.004) continue;
+          ctx.strokeStyle = 'rgba(' + COLOR + ',' + va.toFixed(3) + ')';
+          ctx.beginPath(); ctx.moveTo(vx, vy); ctx.lineTo(vx, vy + SPACING); ctx.stroke();
+        }
+      }
+    }
+
+    function getAlphaAt(c, elapsed) {
+      /* Normalised wave front position: 0→1 over RIPPLE_SECS */
+      var delta = elapsed / RIPPLE_SECS - c.nd;
+      if (delta < 0) return 0;                        /* wave hasn't reached yet */
+      var rise  = Math.min(1, delta / 0.07);          /* fast rise */
+      var decay = Math.min(1, Math.max(0, (delta - 0.07) / 0.48)); /* decay to idle */
+      return PEAK_ALPHA * rise * (1 - decay) + IDLE_ALPHA * rise * decay;
+    }
+
+    function rippleFrame(ts) {
+      if (!rippleTs) rippleTs = ts;
+      var elapsed = (ts - rippleTs) / 1000;
+      if (elapsed > RIPPLE_SECS + 1.2) { rippleTs = null; raf = requestAnimationFrame(rippleFrame); return; }
+      drawGrid(function(c) { return getAlphaAt(c, elapsed); });
+      raf = requestAnimationFrame(rippleFrame);
+    }
+
+    buildGrid();
+    window.addEventListener('resize', buildGrid);
+
+    function play()  { if (!raf) { rippleTs = null; raf = requestAnimationFrame(rippleFrame); } }
+    function pause() { if (raf)  { cancelAnimationFrame(raf); raf = null; } }
+
+    new IntersectionObserver(function(entries) {
+      entries[0].isIntersecting ? play() : pause();
+    }, { threshold: 0 }).observe(section);
+  })();
+</script>
+</body>
+</html>
