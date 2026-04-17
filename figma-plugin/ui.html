@@ -364,6 +364,23 @@ html, body {
 #update-strip:hover { background: var(--kbx-yellow-dk); }
 #update-strip.show { display: flex; }
 
+/* ── No-project banner ──────────────────────────────────── */
+#no-project-banner {
+  display: none; align-items: flex-start; gap: 10px;
+  padding: 9px 14px; background: var(--bg-input);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; line-height: 1.4; flex-shrink: 0;
+}
+#no-project-banner span { color: var(--text-sec); flex: 1; }
+#no-project-create-btn {
+  background: none; border: 1px solid var(--border-lt);
+  border-radius: 4px; color: var(--text); font-size: 10px;
+  font-family: var(--font-body); font-weight: 600;
+  padding: 3px 7px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+#no-project-create-btn:hover { border-color: var(--kbx-yellow); color: var(--kbx-yellow); }
+#no-project-banner.show { display: flex; }
+
 /* ── Sign-in screen ─────────────────────────────────────── */
 #screen-signin .content {
   align-items: center; justify-content: center; text-align: center; gap: 20px;
@@ -469,6 +486,28 @@ html, body {
   font-family: var(--font-body);
 }
 .modal-btns { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
+
+/* ── Project picker screen ── */
+#screen-projects .content { gap: 0; }
+.proj-screen-desc { font-size: 12px; color: var(--text-mute); margin-bottom: 14px; line-height: 1.55; }
+.proj-list { display: flex; flex-direction: column; gap: 7px; }
+.proj-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 12px; border-radius: var(--radius-card);
+  background: var(--bg-card); border: 1px solid var(--border);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.proj-item:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); }
+.proj-item.recommended { border-color: var(--kbx-mint); }
+.proj-item-info { flex: 1; min-width: 0; }
+.proj-item-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proj-item-meta { font-size: 10px; color: var(--text-mute); margin-top: 2px; }
+.proj-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 99px; flex-shrink: 0;
+  background: var(--kbx-mint); color: var(--kbx-black);
+}
+.proj-empty { font-size: 12px; color: var(--text-mute); text-align: center; padding: 28px 0; line-height: 1.65; }
 </style>
 </head>
 <body>
@@ -505,6 +544,11 @@ html, body {
       <span id="update-strip-text">↑ Update available</span>
       <span style="opacity:0.55; font-weight:600;">Download →</span>
     </button>
+
+    <div id="no-project-banner">
+      <span>Not linked to a project yet — connect this Figma file to the web app.</span>
+      <button id="no-project-create-btn">Set up →</button>
+    </div>
 
     <div class="content">
       <div class="field">
@@ -551,6 +595,37 @@ html, body {
     </div>
 
   </div><!-- /screen-main -->
+
+
+  <!-- ═══ PROJECT PICKER SCREEN ════════════════════════════════ -->
+  <div id="screen-projects" class="screen">
+
+    <div class="hdr">
+      <div class="hdr-logo">
+        <svg width="26" height="26" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
+        <div class="hdr-logo-text">
+          <div class="title">Design → Dev</div>
+          <div class="subtitle">Select a project</div>
+        </div>
+      </div>
+      <button class="icon-btn theme-toggle-btn" title="Toggle light/dark mode">
+        <span class="pi-icon icon-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+        <span class="pi-icon icon-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+      </button>
+    </div>
+
+    <div class="content">
+      <p class="proj-screen-desc">Signed in. Choose an existing handover project to load, or start fresh for this file.</p>
+      <div class="proj-list" id="proj-list">
+        <!-- populated by showProjectPicker() -->
+      </div>
+    </div>
+
+    <div class="footer">
+      <button class="btn-secondary" id="proj-new-btn">Start fresh (no project)</button>
+    </div>
+
+  </div><!-- /screen-projects -->
 
 
   <!-- ═══ SETTINGS SCREEN ════════════════════════════════════ -->
@@ -726,7 +801,7 @@ const FIRESTORE_PROJECT  = 'cro-strategic-roadmap';
 const FIRESTORE_BASE     = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents`;
 const SYNC_POLL_INTERVAL = 60 * 1000; // check every 60 seconds
 const LANDING_URL    = 'https://kubix-design.netlify.app/handover-plugin';
-const PLUGIN_VERSION = 'v1.1.10';
+const PLUGIN_VERSION = 'v1.1.19';
 const VERSION_CACHE_KEY = 'kbx_version_check'; // localStorage — survives sessions
 const VERSION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
 
@@ -748,6 +823,7 @@ let state = {
   pageType:      'homepage',
   hasExported:   false,
   isDirty:       false,   // true when notes/status changed since last pull or sync
+  isNewProject:  false,   // true after "Start fresh" — tells web app to create a new project on next export
   shareToken:    '',      // share token from web app (for Firestore pull)
   lastSyncTs:    0,       // ms timestamp of last successful pull from web app
   pluginSyncId:  '',      // unique ID for sync — sent in export, web app writes handover_sync/{id}
@@ -1078,13 +1154,13 @@ function buildExportData() {
   return {
     title:        state.projectName  || 'Figma Import',
     theme:        state.projectTheme || '',
-    // Use effectiveFileKey so the web app can match this project by file key
-    // even when figma.fileKey is null (e.g. draft files) and state.figmaFileUrl is empty.
     figmaFileUrl: effectiveFileKey
       ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}`
       : (state.figmaFileUrl || ''),
     activePage:   pageType,
     pluginSyncId: state.pluginSyncId || '',
+    shareToken:   state.shareToken   || '',
+    isNewProject: state.isNewProject || false,
     pages
   };
 }
@@ -1117,7 +1193,9 @@ document.getElementById('open-btn').addEventListener('click', () => {
   }
 
   post({ type: 'open-url', url });
-  state.isDirty = false; updateOpenBtn();
+  state.isDirty      = false;
+  state.isNewProject = false; // consumed — subsequent exports update the project normally
+  updateOpenBtn();
   showToast(`✓ Opening ${inc} section${inc !== 1 ? 's' : ''} in Handover`);
 
   if (!state.hasExported) {
@@ -1137,7 +1215,7 @@ document.getElementById('open-btn').addEventListener('click', () => {
 // ── Settings ─────────────────────────────────────────────────
 document.getElementById('settings-btn').addEventListener('click', () => {
   document.getElementById('app-url').value        = state.appUrl;
-  document.getElementById('figma-file-url').value = state.manualFigmaUrl;
+  document.getElementById('figma-file-url').value = state.manualFigmaUrl || state.figmaFileUrl || '';
   showScreen('screen-settings');
 });
 
@@ -1442,6 +1520,7 @@ window.onmessage = event => {
 let _signInPollTimer   = null;
 let _signInSessionId   = null;
 let _pendingSignInUser = null; // cached user from poll so confirmSignIn can use it even after sessionId is cleared
+let _authProjects     = [];   // project list from web app auth doc — shown in project picker
 
 document.getElementById('signin-btn').addEventListener('click', startSignIn);
 document.getElementById('signin-confirm-btn').addEventListener('click', confirmSignIn);
@@ -1454,7 +1533,13 @@ function startSignIn() {
   if (waiting) waiting.classList.add('show');
 
   _signInSessionId = 'pa_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
-  const url = `${state.appUrl}?pluginAuth=${_signInSessionId}`;
+  const _fk  = state.fileKey || state.cachedFileKey || '';
+  const _fu  = state.figmaFileUrl || state.manualFigmaUrl || '';
+  const _sid = state.pluginSyncId || '';
+  const url = `${state.appUrl}?pluginAuth=${_signInSessionId}`
+    + (_fk  ? `&fileKey=${encodeURIComponent(_fk)}`  : '')
+    + (_fu  ? `&fileUrl=${encodeURIComponent(_fu)}`  : '')
+    + (_sid ? `&syncId=${encodeURIComponent(_sid)}`  : '');
   post({ type: 'open-url', url });
 
   if (btn) btn.textContent = 'Waiting for sign-in…';
@@ -1477,7 +1562,7 @@ async function confirmSignIn() {
   if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
 
   // If poll already completed sign-in but navigation didn't happen, finish it now
-  if (state.currentUser) { checkFileContext(); return; }
+  if (state.currentUser) { showScreen('screen-main'); return; }
 
   // If poll already fetched the user but onSignInSuccess is still running (or failed), retry it
   if (_pendingSignInUser) {
@@ -1499,9 +1584,11 @@ async function confirmSignIn() {
     const res = await fetch(`${FIRESTORE_BASE}/handover_sync/plugin_auth_${_signInSessionId}`);
     if (!res.ok) throw new Error('not found');
     const doc = await res.json();
-    const email       = doc.fields?.email?.stringValue || '';
+    const email       = doc.fields?.email?.stringValue       || '';
     const displayName = doc.fields?.displayName?.stringValue || email.split('@')[0];
     if (!email) throw new Error('no email');
+    const projsJson = doc.fields?.projectsJson?.stringValue || '';
+    if (projsJson) { try { _authProjects = JSON.parse(projsJson); } catch(e) { _authProjects = []; } }
     clearInterval(_signInPollTimer);
     _signInSessionId = null;
     await onSignInSuccess({ email, displayName });
@@ -1518,11 +1605,12 @@ async function _pollForSignIn() {
     if (!res.ok) return;
     const doc = await res.json();
     if (!doc.fields) return;
-    const email       = doc.fields.email?.stringValue || '';
+    const email       = doc.fields.email?.stringValue       || '';
     const displayName = doc.fields.displayName?.stringValue || email.split('@')[0];
     if (!email) return;
+    const projsJson = doc.fields.projectsJson?.stringValue || '';
+    if (projsJson) { try { _authProjects = JSON.parse(projsJson); } catch(e) { _authProjects = []; } }
     clearInterval(_signInPollTimer);
-    // Cache user data BEFORE clearing sessionId so confirmSignIn can still use it on failure
     _pendingSignInUser = { email, displayName };
     _signInSessionId = null;
     await onSignInSuccess({ email, displayName });
@@ -1530,69 +1618,117 @@ async function _pollForSignIn() {
 }
 
 async function onSignInSuccess(user) {
-  if (state.currentUser) return; // guard against double-invocation from poll + button
+  if (state.currentUser) return;
   state.currentUser = user;
   _pendingSignInUser = null;
   showToast(`✓ Signed in as ${user.displayName}`);
 
-  // Wait for page-data + storage to finish loading before proceeding
   await new Promise(resolve => {
     const check = () => (_initStorageCount >= INIT_KEYS.length && _pageDataReady) ? resolve() : setTimeout(check, 120);
     check();
   });
 
-  // If we're on a different file than what was last stored, clear stale project data
-  // so we don't show another file's project name.
-  const fileKeyChanged = state.fileKey && state.priorFileKey && state.fileKey !== state.priorFileKey;
-  const rootIdChanged  = state.liveRootId && state.rootId && state.liveRootId !== state.rootId;
-  if (fileKeyChanged || rootIdChanged) {
-    state.projectName  = '';
-    state.projectTheme = '';
-    document.getElementById('project-name').value  = '';
-    document.getElementById('project-theme').value = '';
-  }
-
-  // Check Firestore for an existing handover project tied to this Figma file.
-  // Returns true if a project was found — we can skip the "new file?" modal entirely.
-  const projectFound = await _loadExistingProject();
-
-  if (projectFound) {
-    // Confirm file identity so next open doesn't re-trigger change detection
-    state.rootId = state.liveRootId;
-    post({ type: 'set-storage', key: 'rootId', value: state.liveRootId });
-    if (state.fileKey) post({ type: 'set-storage', key: 'cachedFileKey', value: state.fileKey });
-    checkForUpdate();
-    startSyncPolling();
-    showScreen('screen-main');
-    return;
-  }
-
-  // No existing project found — normal flow (welcome / new-file modal / main)
-  checkFileContext();
+  showProjectPicker(_authProjects);
 }
 
-async function _loadExistingProject() {
-  const fileKeyChanged = state.fileKey && state.priorFileKey && state.fileKey !== state.priorFileKey;
+function showProjectPicker(projects) {
+  const list = document.getElementById('proj-list');
+  if (!list) { showScreen('screen-main'); return; }
 
-  // 1. shareToken already in clientStorage — fastest path, most reliable link.
-  //    Skip if fileKey changed (different file shouldn't load previous project).
-  if (!fileKeyChanged && state.shareToken) {
-    const ok = await _tryLoadByShareToken(state.shareToken);
-    if (ok) return true;
-    // Token stale/deleted — clear it so we don't keep trying
-    state.shareToken = '';
-    post({ type: 'set-storage', key: 'shareToken', value: '' });
+  list.innerHTML = '';
+
+  if (!projects || projects.length === 0) {
+    list.innerHTML = '<div class="proj-empty">No published projects found.<br>Set one up in the web app first,<br>then come back and sign in again.</div>';
+  } else {
+    const sorted = [...projects].sort((a, b) => {
+      if (a.matchedFile && !b.matchedFile) return -1;
+      if (!a.matchedFile && b.matchedFile) return 1;
+      return (a.title || '').localeCompare(b.title || '');
+    });
+    sorted.forEach(proj => {
+      const item = document.createElement('div');
+      item.className = 'proj-item' + (proj.matchedFile ? ' recommended' : '');
+      item.innerHTML =
+        `<div class="proj-item-info">` +
+          `<div class="proj-item-title">${esc(proj.title || 'Untitled')}</div>` +
+          (proj.matchedFile ? `<div class="proj-item-meta">Linked to this Figma file</div>` : '') +
+        `</div>` +
+        (proj.matchedFile ? `<span class="proj-tag">This file</span>` : '');
+      item.addEventListener('click', () => selectProject(proj.shareToken));
+      list.appendChild(item);
+    });
   }
 
-  // 2. Sync doc lookup — requires web app to have written handover_sync/{key}.
-  //    Try fileKey first, then pluginSyncId (skip pluginSyncId if file changed).
-  const keysToTry = [state.fileKey];
-  if (!fileKeyChanged && state.pluginSyncId) keysToTry.push(state.pluginSyncId);
-  for (const key of keysToTry.filter(Boolean)) {
-    const ok = await _tryLoadBySyncKey(key);
-    if (ok) return true;
+  showScreen('screen-projects');
+}
+
+async function selectProject(shareToken) {
+  // Clear stale project state BEFORE starting sync polling so the poll
+  // doesn't immediately reload the old project via the stored shareToken.
+  if (!shareToken) {
+    state.shareToken    = '';
+    state.projectName   = '';
+    state.projectTheme  = '';
+    state.pluginSyncId  = '';
+    state.sections      = {};
+    state.isDirty       = false;
+    state.hasExported   = false;
+    state.isNewProject  = true;
+    post({ type: 'set-storage', key: 'shareToken',   value: '' });
+    post({ type: 'set-storage', key: 'projectName',  value: '' });
+    post({ type: 'set-storage', key: 'projectTheme', value: '' });
+    post({ type: 'set-storage', key: 'pluginSyncId', value: '' });
+    post({ type: 'set-storage', key: 'hasExported',  value: false });
+    document.getElementById('project-name').value  = '';
+    document.getElementById('project-theme').value = '';
+    renderFrames();
+    updateOpenBtn();
   }
-  return false;
+
+  // Commit shareToken immediately so export always sends it, even if the
+  // handover_public fetch below fails (project not yet published to public doc).
+  if (shareToken) {
+    state.shareToken = shareToken;
+    post({ type: 'set-storage', key: 'shareToken', value: shareToken });
+  }
+
+  checkForUpdate();
+  startSyncPolling();
+  if (state.liveRootId) post({ type: 'set-storage', key: 'rootId',        value: state.liveRootId });
+  if (state.fileKey)    post({ type: 'set-storage', key: 'cachedFileKey', value: state.fileKey    });
+
+  if (shareToken) {
+    const ok = await _tryLoadByShareToken(shareToken);
+    if (!ok) showToast('⚠ Project not yet published — will link on first export', 3500);
+  }
+
+  updateLinkedBanner();
+  showScreen('screen-main');
+
+  // Remind the designer to paste a Figma file URL in Settings if the current file
+  // doesn't expose one (typical for draft/unsaved files with no fileKey).
+  const _hasFigmaUrl = !!(state.figmaFileUrl || state.manualFigmaUrl);
+  if (!_hasFigmaUrl) {
+    setTimeout(() => {
+      showToast('⚠ No Figma file URL detected — add it in Settings so frame links work', 5000);
+    }, 400);
+  }
+}
+
+function updateLinkedBanner() {
+  const banner = document.getElementById('no-project-banner');
+  if (!banner) return;
+  const linked = !!(state.projectName || state.shareToken);
+  banner.classList.toggle('show', !linked);
+  const btn = document.getElementById('no-project-create-btn');
+  if (btn) {
+    const fk = state.fileKey || state.cachedFileKey || '';
+    const fu = state.figmaFileUrl || state.manualFigmaUrl || '';
+    const dest = state.appUrl + (fk
+      ? `?createForFile=${encodeURIComponent(fk)}&fileUrl=${encodeURIComponent(fu)}`
+      : '');
+    btn.onclick = () => post({ type: 'open-url', url: dest });
+  }
 }
 
 async function _tryLoadByShareToken(shareToken) {
@@ -1603,33 +1739,6 @@ async function _tryLoadByShareToken(shareToken) {
     if (!projDoc.fields) return false;
     return _applyProjectDoc(projDoc, shareToken);
   } catch(e) {
-    return false;
-  }
-}
-
-async function _tryLoadBySyncKey(key) {
-  try {
-    const syncRes = await fetch(`${FIRESTORE_BASE}/handover_sync/${key}`);
-    if (!syncRes.ok) return false;
-    const syncDoc = await syncRes.json();
-    if (!syncDoc.fields) return false;
-
-    const shareToken = syncDoc.fields.shareToken?.stringValue || '';
-    if (!shareToken) return false;
-
-    if (shareToken !== state.shareToken) {
-      state.shareToken = shareToken;
-      post({ type: 'set-storage', key: 'shareToken', value: shareToken });
-    }
-
-    const projRes = await fetch(`${FIRESTORE_BASE}/handover_public/${shareToken}`);
-    if (!projRes.ok) return false;
-    const projDoc = await projRes.json();
-    if (!projDoc.fields) return false;
-
-    return _applyProjectDoc(projDoc, shareToken);
-  } catch(e) {
-    console.warn('[LoadExistingProject]', e);
     return false;
   }
 }
@@ -1652,7 +1761,7 @@ function _applyProjectDoc(projDoc, shareToken) {
 
   const pagesMap  = projDoc.fields.pages?.mapValue?.fields || {};
   const pageData  = pagesMap[state.pageType]?.mapValue?.fields;
-  if (!pageData) { if (title) showToast(`✓ Loaded: ${title}`); return true; }
+  if (!pageData) { updateLinkedBanner(); if (title) showToast(`✓ Loaded: ${title}`); return true; }
 
   const sectionsArr = pageData.sections?.arrayValue?.values || [];
   const frameByName = {};
@@ -1674,6 +1783,7 @@ function _applyProjectDoc(projDoc, shareToken) {
   });
 
   if (loaded > 0) { saveSections(); renderFrames(); }
+  updateLinkedBanner();
   showToast(title ? `✓ Loaded: ${title} (${loaded} section${loaded !== 1 ? 's' : ''})` : `✓ Existing project loaded`);
   return true;
 }
@@ -1766,6 +1876,9 @@ document.getElementById('modal-continue-btn').addEventListener('click', () => {
   document.getElementById('new-file-modal').classList.remove('show');
   showToast('Continuing with previous project');
 });
+
+// Project picker — start fresh (no project)
+document.getElementById('proj-new-btn').addEventListener('click', () => selectProject(null));
 
 // Welcome screen — open web app
 document.getElementById('welcome-open-btn').addEventListener('click', () => {
