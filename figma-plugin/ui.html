@@ -801,7 +801,7 @@ const FIRESTORE_PROJECT  = 'cro-strategic-roadmap';
 const FIRESTORE_BASE     = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents`;
 const SYNC_POLL_INTERVAL = 60 * 1000; // check every 60 seconds
 const LANDING_URL    = 'https://kubix-design.netlify.app/handover-plugin';
-const PLUGIN_VERSION = 'v1.1.19';
+const PLUGIN_VERSION = 'v1.1.20';
 const VERSION_CACHE_KEY = 'kbx_version_check'; // localStorage — survives sessions
 const VERSION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
 
@@ -1722,12 +1722,7 @@ function updateLinkedBanner() {
   banner.classList.toggle('show', !linked);
   const btn = document.getElementById('no-project-create-btn');
   if (btn) {
-    const fk = state.fileKey || state.cachedFileKey || '';
-    const fu = state.figmaFileUrl || state.manualFigmaUrl || '';
-    const dest = state.appUrl + (fk
-      ? `?createForFile=${encodeURIComponent(fk)}&fileUrl=${encodeURIComponent(fu)}`
-      : '');
-    btn.onclick = () => post({ type: 'open-url', url: dest });
+    btn.onclick = () => showProjectPicker(_authProjects);
   }
 }
 
