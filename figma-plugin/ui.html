@@ -135,6 +135,51 @@ html, body {
 .field select option { background: #1e1e20; }
 .field small { font-size: 10px; color: var(--text-sub); line-height: 1.5; margin-top: 1px; }
 
+/* ── Frame mapping table ── */
+.fm-table { display: flex; flex-direction: column; gap: 2px; }
+.fm-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 6px 5px 8px; border-radius: 5px;
+  border-left: 2px solid transparent; cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.fm-row:hover { background: var(--bg-input); }
+.fm-row.fm-active { background: rgba(148,247,161,0.07); border-left-color: #94F7A1; }
+.fm-name {
+  flex: 1; font-size: 12px; font-weight: 500; color: var(--text-sec);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.fm-row.fm-active .fm-name { color: var(--text); font-weight: 600; }
+.fm-row.fm-skip .fm-name { color: var(--text-sub); }
+.fm-select {
+  flex-shrink: 0; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text-sec); font-size: 11px; font-weight: 500;
+  padding: 3px 22px 3px 7px; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236E6E74' stroke-width='1.5' stroke-linecap='round'/%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat; background-position: right 6px center;
+  font-family: var(--font-body); transition: border-color 0.12s; max-width: 130px;
+}
+.fm-select:focus { border-color: var(--kbx-teal); outline: none; box-shadow: 0 0 0 3px var(--kbx-teal-glow); }
+.fm-select option { background: #1e1e20; }
+.fm-row.fm-skip .fm-select { color: var(--text-sub); }
+.fm-empty { font-size: 11px; color: var(--text-sub); padding: 4px 0; }
+.fm-automap-warn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,200,0,0.09); border: 1px solid rgba(255,200,0,0.3);
+  border-radius: 5px; padding: 6px 9px; margin-bottom: 6px;
+  font-size: 10px; color: #c8a000; line-height: 1.35;
+}
+[data-theme="light"] .fm-automap-warn { background: rgba(180,140,0,0.07); border-color: rgba(180,140,0,0.25); color: #8a6800; }
+.fm-new-input {
+  flex-shrink: 0; background: var(--bg-input); border: 1px solid #94F7A1;
+  border-radius: 5px; color: var(--text); font-size: 11px; font-weight: 500;
+  padding: 3px 7px; font-family: var(--font-body); max-width: 130px; width: 130px;
+  outline: none; box-shadow: 0 0 0 2px rgba(148,247,161,0.18);
+}
+.fm-new-input::placeholder { color: var(--text-sub); }
+[data-theme="light"] .fm-select option { background: #EBEBE6; color: #28282B; }
+[data-theme="light"] .fm-row.fm-active { background: rgba(13,105,135,0.07); border-left-color: var(--kbx-teal); }
+
 /* ── Divider ── */
 .divider {
   display: flex; align-items: center; justify-content: space-between;
@@ -146,11 +191,11 @@ html, body {
 }
 .refresh-btn {
   font-size: 11px; font-weight: 600; font-family: var(--font-body);
-  color: var(--text-sub); background: transparent; border: none;
+  color: #94F7A1; background: rgba(148,247,161,0.08); border: 1px solid rgba(148,247,161,0.25);
   cursor: pointer; display: flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+  padding: 3px 8px; border-radius: 6px; transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-.refresh-btn:hover { color: var(--text); background: var(--bg-input); }
+.refresh-btn:hover { background: rgba(148,247,161,0.16); border-color: rgba(148,247,161,0.5); }
 
 /* ── Frame cards ── */
 .frames-list { display: flex; flex-direction: column; gap: 8px; }
@@ -559,21 +604,10 @@ html, body {
         <label>Base Theme</label>
         <input type="text" id="project-theme" placeholder="e.g. Dawn, Impulse, Hyper…">
       </div>
-      <div class="field">
-        <label>This Figma page is the…</label>
-        <select id="page-type">
-          <option value="homepage">Homepage</option>
-          <option value="collection">Collection Page</option>
-          <option value="product">Product Page</option>
-          <option value="aboutus">About Us</option>
-          <option value="contactus">Contact Us</option>
-        </select>
-      </div>
-
-      <div class="field" id="source-frame-field" style="display:none">
-        <label>Sections from</label>
-        <select id="source-frame"></select>
-        <small>Multiple container frames detected — select which one holds your desktop sections.</small>
+      <div class="field" id="frame-mapping-field">
+        <label>Page mapping</label>
+        <div class="fm-table" id="frame-mapping-table"></div>
+        <small id="frame-mapping-hint" style="display:none">Click a row to view its sections. Each frame exports to its assigned tab.</small>
       </div>
 
       <div class="divider">
@@ -656,7 +690,7 @@ html, body {
       <div class="field">
         <label>Figma File URL (for frame links)</label>
         <input type="url" id="figma-file-url" placeholder="https://www.figma.com/design/…">
-        <small>Paste your Figma file URL so section links are always populated, even for draft files where Figma doesn't provide a file key automatically.</small>
+        <small id="figma-file-url-hint">Paste your Figma file URL only if automatic detection is unavailable.</small>
       </div>
 
       <div class="danger-zone">
@@ -801,7 +835,7 @@ const FIRESTORE_PROJECT  = 'cro-strategic-roadmap';
 const FIRESTORE_BASE     = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT}/databases/(default)/documents`;
 const SYNC_POLL_INTERVAL = 60 * 1000; // check every 60 seconds
 const LANDING_URL    = 'https://kubix-design.netlify.app/handover-plugin';
-const PLUGIN_VERSION = 'v1.1.20';
+const PLUGIN_VERSION = 'v1.1.27';
 const VERSION_CACHE_KEY = 'kbx_version_check'; // localStorage — survives sessions
 const VERSION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
 
@@ -814,16 +848,18 @@ let state = {
   manualFigmaUrl:  '',   // user-supplied file URL from Settings (ultimate fallback for drafts)
   figmaFileUrl:    '',
   topFrames:     [],   // raw top-level frame data from code.js [{ id, name, childCount, sections }]
-  sourceFrameId: '',   // which topFrame is currently the sections source
+  activeFrameId: '',   // which topFrame's sections are shown in the panel
+  frameMappings:      {},   // { frameId: pageType | 'skip' } — persisted per file+page
+  customPageOptions:  [],   // extra options fetched from webapp { value, label }
   frames:        [],   // active sections [{ id, name, figmaLink }]
-  sections:      {},   // { frameId: { name, status, notes, included } }
+  sections:      {},   // { sectionId: { name, status, notes, included } }
   appUrl:        DEFAULT_URL,
   projectName:   '',
   projectTheme:  '',
-  pageType:      'homepage',
   hasExported:   false,
-  isDirty:       false,   // true when notes/status changed since last pull or sync
-  isNewProject:  false,   // true after "Start fresh" — tells web app to create a new project on next export
+  isDirty:           false,  // true when notes/status changed since last pull or sync
+  isNewProject:      false,  // true after "Start fresh" — tells web app to create a new project on next export
+  mappingsConfirmed: false,  // true when mappings loaded from storage/Firestore or user has manually set one
   shareToken:    '',      // share token from web app (for Firestore pull)
   lastSyncTs:    0,       // ms timestamp of last successful pull from web app
   pluginSyncId:  '',      // unique ID for sync — sent in export, web app writes handover_sync/{id}
@@ -841,6 +877,23 @@ function esc(str) {
   return String(str || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function extractFigmaFileKey(url) {
+  const m = String(url || '').match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
+  return m ? m[1] : '';
+}
+
+function getEffectiveFigmaFileKey() {
+  return state.fileKey || extractFigmaFileKey(state.manualFigmaUrl);
+}
+
+function getEffectiveFigmaFileUrl() {
+  const manual = state.manualFigmaUrl || '';
+  if (manual) return manual;
+  if (state.figmaFileUrl) return state.figmaFileUrl;
+  const key = getEffectiveFigmaFileKey();
+  return key ? `https://www.figma.com/design/${key}/${encodeURIComponent(state.pageName || 'Figma')}` : '';
 }
 
 // ── Sections persistence ──────────────────────────────────────
@@ -909,7 +962,7 @@ async function checkForUpdate() {
     }
 
     const res = await fetch(
-      'https://api.github.com/repos/kbx-ali/design-to-dev-handover/releases/latest',
+      'https://api.github.com/repos/kbx-ali/handover/releases/latest',
       { headers: { 'Accept': 'application/vnd.github.v3+json' } }
     );
     if (!res.ok) return; // fail silently — non-critical
@@ -945,73 +998,197 @@ function post(msg) {
   parent.postMessage({ pluginMessage: msg }, '*');
 }
 
-// ── Source-frame auto-selection ───────────────────────────────
-// Returns the id of the best top-level frame to use as sections source.
-function autoSelectSource(topFrames, pageType) {
-  if (!topFrames || topFrames.length === 0) return '';
-
-  // Frames that CONTAIN child frames are the real "page" containers.
-  const containers = topFrames.filter(f => f.childCount > 0);
-
-  // No containers at all → just use the first topFrame (rare edge case)
-  if (containers.length === 0) return topFrames[0].id;
-
-  // Only one container → obvious choice
-  if (containers.length === 1) return containers[0].id;
-
-  // Multiple containers → keyword-score by page type, penalise mobile variants
-  const keywords = {
-    homepage:   ['home', 'homepage', 'index', 'landing'],
-    collection: ['collect', 'plp', 'category', 'listing', 'catalog'],
-    product:    ['product', 'pdp', 'detail'],
-    aboutus:    ['about', 'about-us', 'our-story', 'team'],
-    contactus:  ['contact', 'contact-us', 'get-in-touch'],
-  }[pageType] || [];
-
-  const isMobile = name => /mobile|mob\b/i.test(name);
-
-  const scored = containers
-    .map(f => {
-      const lower = f.name.toLowerCase();
-      const kw    = keywords.some(k => lower.includes(k)) ? 10 : 0;
-      const mob   = isMobile(f.name) ? -5 : 0;
-      return { id: f.id, score: kw + mob };
-    })
-    .sort((a, b) => b.score - a.score);
-
-  // Best positive-score frame wins; otherwise first non-mobile container
-  if (scored[0].score > 0) return scored[0].id;
-  const nonMobile = containers.find(f => !isMobile(f.name));
-  return (nonMobile || containers[0]).id;
+// ── Frame mapping helpers ─────────────────────────────────────
+const BASE_PAGE_OPTIONS = [
+  { value: 'homepage',   label: 'Homepage' },
+  { value: 'collection', label: 'Collection' },
+  { value: 'product',    label: 'Product Page' },
+];
+const BASE_PAGE_KEYS = new Set(BASE_PAGE_OPTIONS.map(o => o.value));
+// Preset labels for known keys that may arrive via customPages
+const PRESET_PAGE_LABELS = { aboutus: 'About Us', contactus: 'Contact Us' };
+// Returns base options + any custom pages loaded from the webapp, then Don't include
+function getPageMappingOptions() {
+  return [
+    ...BASE_PAGE_OPTIONS,
+    ...state.customPageOptions,
+    { value: '__new__', label: '+ New tab…' },
+    { value: 'skip',    label: "Don't include" },
+  ];
 }
 
-// Rebuild (or hide) the "Sections from" dropdown.
-function updateSourceSelector() {
-  const containers = state.topFrames.filter(f => f.childCount > 0);
-  const field      = document.getElementById('source-frame-field');
-  const sel        = document.getElementById('source-frame');
-  if (!field || !sel) return;
+// Create a brand-new custom page option and assign it to the given frame.
+// Called when the user picks "+ New tab…" and types a name.
+function commitNewTab(frameId, label) {
+  const trimmed = label.trim();
+  if (!trimmed) { renderFrameMapping(); return; }
+  // Generate a stable key identical to webapp's addCustomPage format
+  const key = 'page_' + Math.random().toString(36).slice(2, 8);
+  state.customPageOptions.push({ value: key, label: trimmed });
+  state.frameMappings[frameId] = key;
+  state.isDirty = true;
+  state.mappingsConfirmed = true;
+  saveFrameMappings();
+  renderFrameMapping();
+  activateFrame(frameId);
+}
+const PAGE_KEYWORDS = {
+  homepage:   ['home', 'homepage', 'index', 'landing'],
+  collection: ['collect', 'plp', 'category', 'listing', 'catalog'],
+  product:    ['product', 'pdp', 'detail'],
+  aboutus:    ['about', 'about-us', 'our-story', 'team'],
+  contactus:  ['contact', 'contact-us', 'get-in-touch'],
+};
 
-  if (containers.length <= 1) {
-    field.style.display = 'none';
+// Auto-assign page types to any frames not yet in frameMappings.
+// Returns true if any frames were newly assigned (used to flag unconfirmed state).
+function autoAssignMappings(topFrames) {
+  if (!topFrames || topFrames.length === 0) return false;
+  const usedPages   = new Set(Object.values(state.frameMappings).filter(v => v && v !== 'skip'));
+  let firstUnmapped = true;
+  let anyNew = false;
+  topFrames.forEach(frame => {
+    if (state.frameMappings[frame.id]) return;
+    anyNew = true;
+    const name = frame.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    for (const [pageKey, kws] of Object.entries(PAGE_KEYWORDS)) {
+      if (!usedPages.has(pageKey) && kws.some(kw => name.includes(kw))) {
+        state.frameMappings[frame.id] = pageKey;
+        usedPages.add(pageKey);
+        return;
+      }
+    }
+    if (firstUnmapped && !usedPages.has('homepage')) {
+      state.frameMappings[frame.id] = 'homepage';
+      usedPages.add('homepage');
+    } else {
+      state.frameMappings[frame.id] = 'skip';
+    }
+    firstUnmapped = false;
+  });
+  return anyNew;
+}
+
+// Render the frame→page mapping table.
+function renderFrameMapping() {
+  const table = document.getElementById('frame-mapping-table');
+  const hint  = document.getElementById('frame-mapping-hint');
+  if (!table) return;
+  if (!state.topFrames.length) {
+    table.innerHTML = '<div class="fm-empty">No frames found on this page.</div>';
+    if (hint) hint.style.display = 'none';
     return;
   }
+  if (hint) hint.style.display = state.topFrames.length > 1 ? '' : 'none';
+  const warnHtml = (!state.mappingsConfirmed && state.topFrames.length > 0)
+    ? `<div class="fm-automap-warn">⚠ Mappings auto-assigned — Pull to restore saved mappings, or confirm below before syncing.</div>`
+    : '';
+  table.innerHTML = warnHtml + state.topFrames.map(frame => {
+    const mapped   = state.frameMappings[frame.id] || 'skip';
+    const isActive = frame.id === state.activeFrameId;
+    const isSkip   = mapped === 'skip';
+    // Show inline text input when this row is in "create new tab" state
+    const control  = (mapped === '__new__')
+      ? `<input class="fm-new-input" data-frame-id="${esc(frame.id)}" placeholder="Tab name…" autocomplete="off">`
+      : (() => {
+          const selOpts = getPageMappingOptions().map(o =>
+            `<option value="${o.value}"${mapped === o.value ? ' selected' : ''}>${o.label}</option>`
+          ).join('');
+          return `<select class="fm-select" data-frame-id="${esc(frame.id)}">${selOpts}</select>`;
+        })();
+    return `<div class="fm-row${isActive ? ' fm-active' : ''}${isSkip ? ' fm-skip' : ''}" data-frame-id="${esc(frame.id)}">` +
+      `<span class="fm-name">${esc(frame.name)}</span>` +
+      control +
+      `</div>`;
+  }).join('');
 
-  field.style.display = 'flex';
-  sel.innerHTML = containers.map(f =>
-    `<option value="${esc(f.id)}"${f.id === state.sourceFrameId ? ' selected' : ''}>${esc(f.name)} (${f.sections.length} section${f.sections.length !== 1 ? 's' : ''})</option>`
-  ).join('');
+  // Auto-focus and wire up any new-tab inputs rendered this cycle
+  table.querySelectorAll('.fm-new-input').forEach(input => {
+    input.focus();
+    const commit = () => commitNewTab(input.dataset.frameId, input.value);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { state.frameMappings[input.dataset.frameId] = 'skip'; renderFrameMapping(); }
+    });
+    input.addEventListener('blur', commit);
+  });
 }
 
-// Switch active source frame → updates state.frames and re-renders.
-function applySourceFrame(frameId) {
-  state.sourceFrameId = frameId;
-  const tf = state.topFrames.find(f => f.id === frameId);
-  if (!tf) { state.frames = []; renderFrames(); return; }
+function frameMappingsStorageKey() {
+  return 'frameMaps_' + (state.fileKey || state.cachedFileKey || 'nofk') + '_' + (state.pageName || 'nopage');
+}
+function saveFrameMappings() {
+  post({ type: 'set-storage', key: frameMappingsStorageKey(), value: state.frameMappings });
+}
 
-  state.frames = tf.sections;          // [{ id, name, figmaLink }]
+function isStoredFileContextStale() {
+  const fileKeyChanged = state.fileKey && state.priorFileKey
+    && state.fileKey !== state.priorFileKey;
+  const rootIdChanged = state.liveRootId && state.rootId
+    && state.liveRootId !== state.rootId;
+  return !!(fileKeyChanged || rootIdChanged);
+}
+
+function clearProjectScopedState(options = {}) {
+  const clearFileScopedStorage = options.clearFileScopedStorage !== false;
+  const clearManualFigmaUrl = options.clearManualFigmaUrl === true;
+
+  if (clearFileScopedStorage) {
+    post({ type: 'del-storage', key: sectionsStorageKey() });
+    post({ type: 'del-storage', key: frameMappingsStorageKey() });
+  }
+
+  state.projectName = '';
+  state.projectTheme = '';
+  state.shareToken = '';
+  state.pluginSyncId = '';
+  state.sections = {};
+  state.frameMappings = {};
+  state.customPageOptions = [];
+  state.mappingsConfirmed = false;
+  state.lastSyncTs = 0;
+  state.hasExported = false;
+  state.isDirty = false;
+  if (clearManualFigmaUrl) {
+    state.manualFigmaUrl = '';
+    if (!state.fileKey) state.cachedFileKey = '';
+  }
+
+  post({ type: 'set-storage', key: 'projectName',  value: '' });
+  post({ type: 'set-storage', key: 'projectTheme', value: '' });
+  post({ type: 'set-storage', key: 'shareToken',   value: '' });
+  post({ type: 'set-storage', key: 'pluginSyncId', value: '' });
+  post({ type: 'set-storage', key: 'lastSyncTs',   value: 0 });
+  post({ type: 'set-storage', key: 'hasExported',  value: false });
+  if (clearManualFigmaUrl) {
+    post({ type: 'set-storage', key: 'manualFigmaUrl', value: '' });
+    if (!state.fileKey) post({ type: 'set-storage', key: 'cachedFileKey', value: '' });
+  }
+
+  document.getElementById('project-name').value = '';
+  document.getElementById('project-theme').value = '';
+
+  autoAssignMappings(state.topFrames);
+  const firstActive = state.topFrames.find(f => state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip')
+                   || state.topFrames[0];
+  if (firstActive) activateFrame(firstActive.id);
+  else {
+    state.frames = [];
+    renderFrames();
+    renderFrameMapping();
+  }
+  updateOpenBtn();
+}
+
+// Switch which frame's sections are shown in the panel.
+function activateFrame(frameId) {
+  state.activeFrameId = frameId;
+  const tf = state.topFrames.find(f => f.id === frameId);
+  if (!tf) { state.frames = []; renderFrames(); renderFrameMapping(); return; }
+  state.frames = tf.sections;
   state.frames.forEach(f => ensureSection(f.id));
   renderFrames();
+  renderFrameMapping();
 }
 
 // ── Section state helpers ─────────────────────────────────────
@@ -1111,56 +1288,74 @@ function renderFrames() {
 
 // ── Build export payload ──────────────────────────────────────
 function buildExportData() {
-  const pageType = state.pageType;
-  const included = state.frames.filter(f => state.sections[f.id]?.included !== false);
-
-  // Use live fileKey first, fall back to the last cached key so section links
-  // are always populated even when figma.fileKey returns null (e.g. draft files).
-  const effectiveFileKey  = state.fileKey || state.cachedFileKey;
+  const effectiveFileKey  = getEffectiveFigmaFileKey();
   const effectivePageName = state.pageName;
+  const effectiveFileUrl  = getEffectiveFigmaFileUrl();
+  const pages         = {};
+  const activeTabs    = [];  // all non-skip mapped page keys
+  const customPageDefs = []; // { key, label } for custom tabs only
+  let   activePage = null;
 
-  const sections = included.map(f => {
-    const sec = state.sections[f.id] || {};
-    // If code.js could not build a figmaLink (fileKey was null at scan time),
-    // construct one now using the effective key + the section's node ID.
-    const figmaLink = f.figmaLink || (effectiveFileKey && f.id
-      ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}?node-id=${f.id.replace(':', '-')}`
-      : '');
-    // Omit default values to keep the payload compact (reduces URL length,
-    // avoiding potential truncation by figma.openExternal).
-    const entry = {
-      name:     f.name,
-      status:   sec.status || 'existing',
-      figmaLink
-    };
-    if (sec.notes) entry.notes = sec.notes;
-    return entry;
+  state.topFrames.forEach(tf => {
+    const pageType = state.frameMappings[tf.id];
+    if (!pageType || pageType === 'skip') return;
+    if (!activePage) activePage = pageType;
+    if (!activeTabs.includes(pageType)) {
+      activeTabs.push(pageType);
+      // If this is a custom page (not a base page key), record its label
+      const opt = getPageMappingOptions().find(o => o.value === pageType);
+      if (opt && !BASE_PAGE_KEYS.has(pageType)) {
+        customPageDefs.push({ key: pageType, label: opt.label });
+      }
+    }
+
+    const included = tf.sections.filter(f => state.sections[f.id]?.included !== false);
+    const sections = included.map(f => {
+      const sec      = state.sections[f.id] || {};
+      const figmaLink = f.figmaLink || (effectiveFileKey && f.id
+        ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}?node-id=${f.id.replace(':', '-')}`
+        : '');
+      const entry = { name: f.name, status: sec.status || 'existing', figmaLink };
+      if (sec.notes) entry.notes = sec.notes;
+      return entry;
+    });
+
+    const nodeId      = (tf.id && tf.id !== '__canvas__') ? tf.id.replace(':', '-') : '';
+    const pageFigmaUrl = (effectiveFileKey && nodeId)
+      ? `https://www.figma.com/design/${effectiveFileKey}?node-id=${nodeId}`
+      : effectiveFileUrl;
+
+    pages[pageType] = { figmaUrl: pageFigmaUrl || '', sections };
   });
 
-  // Use a node-specific Figma URL so the web app's "Populate from Figma"
-  // button drills into exactly the right source frame (not the whole file).
-  const nodeId = state.sourceFrameId
-    ? state.sourceFrameId.replace(':', '-')
-    : '';
-  const pageFigmaUrl = (effectiveFileKey && nodeId)
-    ? `https://www.figma.com/design/${effectiveFileKey}?node-id=${nodeId}`
-    : state.figmaFileUrl;
-
-  // Only include the active page to minimise URL length — the web app fills
-  // in missing page keys with defaults.
-  const pages = {};
-  pages[pageType] = { figmaUrl: pageFigmaUrl || '', sections };
+  // Fallback: no mappings set — send active frame as homepage
+  if (!Object.keys(pages).length && state.frames.length) {
+    activePage = 'homepage';
+    const sections = state.frames
+      .filter(f => state.sections[f.id]?.included !== false)
+      .map(f => {
+        const sec = state.sections[f.id] || {};
+        const figmaLink = f.figmaLink || (effectiveFileKey && f.id
+          ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}?node-id=${f.id.replace(':', '-')}`
+          : '');
+        const entry = { name: f.name, status: sec.status || 'existing', figmaLink };
+        if (sec.notes) entry.notes = sec.notes;
+        return entry;
+      });
+    pages['homepage'] = { figmaUrl: effectiveFileUrl || '', sections };
+  }
 
   return {
     title:        state.projectName  || 'Figma Import',
     theme:        state.projectTheme || '',
-    figmaFileUrl: effectiveFileKey
-      ? `https://www.figma.com/design/${effectiveFileKey}/${encodeURIComponent(effectivePageName)}`
-      : (state.figmaFileUrl || ''),
-    activePage:   pageType,
+    figmaFileUrl: effectiveFileUrl,
+    activePage:   activePage || 'homepage',
     pluginSyncId: state.pluginSyncId || '',
     shareToken:   state.shareToken   || '',
     isNewProject: state.isNewProject || false,
+    activeTabs,
+    customPageDefs,
+    frameMappings: state.frameMappings || {},
     pages
   };
 }
@@ -1214,8 +1409,16 @@ document.getElementById('open-btn').addEventListener('click', () => {
 
 // ── Settings ─────────────────────────────────────────────────
 document.getElementById('settings-btn').addEventListener('click', () => {
-  document.getElementById('app-url').value        = state.appUrl;
-  document.getElementById('figma-file-url').value = state.manualFigmaUrl || state.figmaFileUrl || '';
+  document.getElementById('app-url').value = state.appUrl;
+  const figmaInput = document.getElementById('figma-file-url');
+  const figmaHint = document.getElementById('figma-file-url-hint');
+  figmaInput.value = state.manualFigmaUrl || '';
+  figmaInput.placeholder = state.figmaFileUrl || 'https://www.figma.com/design/...';
+  if (figmaHint) {
+    figmaHint.textContent = state.figmaFileUrl
+      ? 'Automatic Figma URL detected. Leave this blank unless you need to override it.'
+      : 'Automatic detection is unavailable for this file. Paste the Figma file URL before exporting frame links.';
+  }
   showScreen('screen-settings');
 });
 
@@ -1249,10 +1452,13 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     return;
   }
   // Confirmed — delete all known keys including the current sections key
-  const keysToDelete = [...ALL_STORAGE_KEYS, sectionsStorageKey()];
+  const keysToDelete = [...ALL_STORAGE_KEYS, sectionsStorageKey(), frameMappingsStorageKey()];
   keysToDelete.forEach(k => post({ type: 'del-storage', key: k }));
   // Reset in-memory state
   state.sections      = {};
+  state.frameMappings = {};
+  state.customPageOptions = [];
+  state.mappingsConfirmed = false;
   state.projectName   = '';
   state.projectTheme  = '';
   state.shareToken    = '';
@@ -1275,11 +1481,16 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
   const manualUrl    = document.getElementById('figma-file-url').value.trim();
   state.appUrl        = url;
   state.manualFigmaUrl = manualUrl;
-  // Extract fileKey from the manual URL so buildExportData can use it
-  const m = manualUrl.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
-  if (m) {
-    state.cachedFileKey = m[1];
-    post({ type: 'set-storage', key: 'cachedFileKey', value: m[1] });
+  const manualFileKey = extractFigmaFileKey(manualUrl);
+  if (manualFileKey) {
+    state.cachedFileKey = manualFileKey;
+    post({ type: 'set-storage', key: 'cachedFileKey', value: manualFileKey });
+  } else if (state.fileKey) {
+    state.cachedFileKey = state.fileKey;
+    post({ type: 'set-storage', key: 'cachedFileKey', value: state.fileKey });
+  } else {
+    state.cachedFileKey = '';
+    post({ type: 'set-storage', key: 'cachedFileKey', value: '' });
   }
   post({ type: 'set-storage', key: 'appUrl',         value: url         });
   post({ type: 'set-storage', key: 'manualFigmaUrl', value: manualUrl   });
@@ -1326,9 +1537,12 @@ async function checkForWebAppUpdates() {
       if (!tsVal) continue;
       const ts = new Date(tsVal).getTime();
 
-      // Cache the shareToken so we can pull later
+      // Cache the shareToken only when no project is currently linked.
+      // If the user has explicitly selected a project, their choice wins —
+      // we must NOT let the stale sync doc (which still references the last
+      // project pushed from this Figma file) clobber the selected token.
       const shareToken = doc.fields.shareToken?.stringValue || '';
-      if (shareToken && shareToken !== state.shareToken) {
+      if (shareToken && !state.shareToken) {
         state.shareToken = shareToken;
         post({ type: 'set-storage', key: 'shareToken', value: shareToken });
       }
@@ -1366,40 +1580,121 @@ async function pullFromFirestore() {
     const doc = await res.json();
     if (!doc.fields) throw new Error('Empty document');
 
-    // Firestore REST API returns nested mapValue/arrayValue structures — parse them
-    const pagesMap = doc.fields.pages?.mapValue?.fields || {};
-    const pageKey  = state.pageType || 'homepage';
-    const pageData = pagesMap[pageKey]?.mapValue?.fields;
-    if (!pageData) throw new Error(`No data for page: ${pageKey}`);
+    // ── Sync project name and theme from webapp ──────────────────────
+    const webTitle = doc.fields.title?.stringValue || '';
+    const webTheme = doc.fields.theme?.stringValue || '';
+    if (webTitle && webTitle !== state.projectName) {
+      state.projectName = webTitle;
+      document.getElementById('project-name').value = webTitle;
+      post({ type: 'set-storage', key: 'projectName', value: webTitle });
+    }
+    if (webTheme !== undefined && webTheme !== state.projectTheme) {
+      state.projectTheme = webTheme;
+      document.getElementById('project-theme').value = webTheme;
+      post({ type: 'set-storage', key: 'projectTheme', value: webTheme });
+    }
 
-    const sectionsArr = pageData.sections?.arrayValue?.values || [];
+    // ── Update custom page options from the fetched doc ──────────────
+    const rawCustomPages = doc.fields.customPages?.arrayValue?.values || [];
+    const newCustomOpts = rawCustomPages
+      .map(v => ({
+        value: v.mapValue?.fields?.key?.stringValue   || '',
+        label: v.mapValue?.fields?.label?.stringValue || '',
+      }))
+      .filter(o => o.value && !BASE_PAGE_KEYS.has(o.value));
+    newCustomOpts.forEach(o => { if (!o.label) o.label = PRESET_PAGE_LABELS[o.value] || o.value; });
+    const prevKeys = state.customPageOptions.map(o => o.value).join(',');
+    const nextKeys = newCustomOpts.map(o => o.value).join(',');
+    if (prevKeys !== nextKeys) {
+      state.customPageOptions = newCustomOpts;
+      renderFrameMapping();
+    }
+
+    // ── Sync section notes/status for ALL mapped frames ──────────────
+    // Loop over every top-level frame that has a non-skip mapping so that
+    // a single Pull loads data regardless of which frame is currently active.
+    const pagesMap = doc.fields.pages?.mapValue?.fields || {};
     let updatedCount = 0;
 
-    // Build a name→frame lookup for matching (web app IDs are kbx_..., plugin IDs are Figma node IDs)
-    const frameByName = {};
-    state.frames.forEach(f => {
-      frameByName[f.name.toLowerCase().trim()] = f;
+    state.topFrames.forEach(function(tf) {
+      var pageKey = state.frameMappings[tf.id];
+      if (!pageKey || pageKey === 'skip') return;
+
+      var pageData = pagesMap[pageKey] && pagesMap[pageKey].mapValue && pagesMap[pageKey].mapValue.fields;
+      if (!pageData) return;
+
+      var sectionsArr = (pageData.sections && pageData.sections.arrayValue && pageData.sections.arrayValue.values) || [];
+
+      // Build name lookup for this frame's child sections
+      var frameByName = {};
+      (tf.sections || []).forEach(function(f) {
+        frameByName[f.name.toLowerCase().trim()] = f;
+        ensureSection(f.id);
+      });
+
+      sectionsArr.forEach(function(sVal) {
+        var sf = sVal && sVal.mapValue && sVal.mapValue.fields;
+        if (!sf) return;
+        var webId = (sf.id && (sf.id.stringValue || sf.id.integerValue)) || '';
+        var name  = (sf.name && sf.name.stringValue) || '';
+
+        // Match by Figma node ID first, then by section name
+        var allSections = tf.sections || [];
+        var frame = allSections.find(function(f) { return f.id === String(webId); });
+        if (!frame && name) frame = frameByName[name.toLowerCase().trim()];
+        if (!frame) return;
+
+        var fid = frame.id;
+        if (!state.sections[fid]) state.sections[fid] = {};
+        if (sf.notes  !== undefined) state.sections[fid].notes  = (sf.notes.stringValue  || '');
+        if (sf.status !== undefined) state.sections[fid].status = (sf.status.stringValue || 'existing');
+        updatedCount++;
+      });
     });
 
-    sectionsArr.forEach(sVal => {
-      const sf = sVal?.mapValue?.fields;
-      if (!sf) return;
-      const webId = sf.id?.stringValue || sf.id?.integerValue || '';
-      const name  = sf.name?.stringValue || '';
-
-      // Match by ID first (if plugin exported to web, the ID might match), then by name
-      let frame = state.frames.find(f => f.id === String(webId));
-      if (!frame && name) {
-        frame = frameByName[name.toLowerCase().trim()];
+    // If no frames have mappings yet (fresh install, no prior export),
+    // fall back to trying the homepage key against the currently active frame
+    if (updatedCount === 0 && state.frames.length > 0) {
+      var fallbackData = pagesMap['homepage'] && pagesMap['homepage'].mapValue && pagesMap['homepage'].mapValue.fields;
+      if (fallbackData) {
+        var fallbackSections = (fallbackData.sections && fallbackData.sections.arrayValue && fallbackData.sections.arrayValue.values) || [];
+        var fbByName = {};
+        state.frames.forEach(function(f) { fbByName[f.name.toLowerCase().trim()] = f; ensureSection(f.id); });
+        fallbackSections.forEach(function(sVal) {
+          var sf = sVal && sVal.mapValue && sVal.mapValue.fields;
+          if (!sf) return;
+          var name = (sf.name && sf.name.stringValue) || '';
+          var frame = name ? fbByName[name.toLowerCase().trim()] : null;
+          if (!frame) return;
+          var fid = frame.id;
+          if (!state.sections[fid]) state.sections[fid] = {};
+          if (sf.notes  !== undefined) state.sections[fid].notes  = (sf.notes.stringValue  || '');
+          if (sf.status !== undefined) state.sections[fid].status = (sf.status.stringValue || 'existing');
+          updatedCount++;
+        });
       }
-      if (!frame) return;
+    }
 
-      const fid = frame.id;
-      if (!state.sections[fid]) state.sections[fid] = {};
-      if (sf.notes  !== undefined) state.sections[fid].notes  = sf.notes.stringValue  || '';
-      if (sf.status !== undefined) state.sections[fid].status = sf.status.stringValue || 'existing';
-      updatedCount++;
+    // ── Restore frame→page mappings from Firestore ───────────────
+    // Stored as a map field: frameMappings.{nodeId} = pageKey (stringValue)
+    const rawMappings = doc.fields.frameMappings?.mapValue?.fields || {};
+    const restoredMappings = {};
+    Object.entries(rawMappings).forEach(function(entry) {
+      var k = entry[0]; var v = entry[1];
+      var val = v.stringValue || '';
+      if (val) restoredMappings[k] = val;
     });
+    if (Object.keys(restoredMappings).length > 0) {
+      // Merge: Firestore wins for keys that exist; keep local for any new frames added since last push
+      state.frameMappings = Object.assign({}, state.frameMappings, restoredMappings);
+      state.mappingsConfirmed = true;
+      saveFrameMappings();
+      // Re-activate the best first frame after mapping restore
+      autoAssignMappings(state.topFrames);
+      const firstMapped = state.topFrames.find(function(f) { return state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip'; });
+      if (firstMapped && firstMapped.id !== state.activeFrameId) activateFrame(firstMapped.id);
+      else renderFrameMapping();
+    }
 
     // Persist and re-render
     state.lastSyncTs = Date.now();
@@ -1422,17 +1717,34 @@ async function pullFromFirestore() {
 // ── Live field sync ───────────────────────────────────────────
 document.getElementById('project-name').addEventListener('input',  e => { state.projectName  = e.target.value; state.isDirty = true; updateOpenBtn(); });
 document.getElementById('project-theme').addEventListener('input', e => { state.projectTheme = e.target.value; state.isDirty = true; updateOpenBtn(); });
-document.getElementById('page-type').addEventListener('change', e => {
-  state.pageType = e.target.value;
-  if (state.topFrames.length > 0) {
-    const bestId = autoSelectSource(state.topFrames, state.pageType);
-    applySourceFrame(bestId);   // sets state.sourceFrameId + state.frames + renders
-    updateSourceSelector();     // update dropdown to reflect new selection
-  }
-});
 
-document.getElementById('source-frame').addEventListener('change', e => {
-  applySourceFrame(e.target.value);
+// Frame mapping table — click row to activate, change select to remap
+document.getElementById('frame-mapping-table').addEventListener('click', e => {
+  if (e.target.tagName === 'SELECT') return;
+  const row = e.target.closest('.fm-row');
+  if (!row) return;
+  activateFrame(row.dataset.frameId);
+});
+document.getElementById('frame-mapping-table').addEventListener('change', e => {
+  if (e.target.tagName !== 'SELECT') return;
+  const frameId = e.target.dataset.frameId;
+  const newVal  = e.target.value;
+  // "+ New tab…" — switch the row to inline-input mode; don't save yet
+  if (newVal === '__new__') {
+    state.frameMappings[frameId] = '__new__';
+    renderFrameMapping();
+    return;
+  }
+  state.frameMappings[frameId] = newVal;
+  state.isDirty = true;
+  state.mappingsConfirmed = true;
+  saveFrameMappings();
+  // If active frame was just set to skip, switch view to first non-skip frame
+  if (frameId === state.activeFrameId && newVal === 'skip') {
+    const next = state.topFrames.find(f => state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip');
+    if (next) { activateFrame(next.id); return; }
+  }
+  renderFrameMapping();
 });
 
 // ── Messages from Figma sandbox ───────────────────────────────
@@ -1454,26 +1766,22 @@ window.onmessage = event => {
     if (d.fileKey) {
       state.cachedFileKey = d.fileKey;
     }
-    state.topFrames    = d.topFrames || [];
+    state.topFrames = d.topFrames || [];
 
     document.getElementById('hdr-page-name').textContent = d.pageName || 'Figma Page';
 
-    // Auto-detect page type from Figma page name
-    const lower = (d.pageName || '').toLowerCase();
-    if      (lower.includes('collect') || lower.includes('plp'))    state.pageType = 'collection';
-    else if (lower.includes('product') || lower.includes('pdp'))    state.pageType = 'product';
-    else if (lower.includes('about'))                               state.pageType = 'aboutus';
-    else if (lower.includes('contact'))                             state.pageType = 'contactus';
-    else                                                            state.pageType = 'homepage';
-    document.getElementById('page-type').value = state.pageType;
+    // Auto-assign frame→page mappings (fills gaps, preserves any already saved)
+    autoAssignMappings(state.topFrames);
 
-    // Pick the best source frame, build the selector, then apply
-    const bestId = autoSelectSource(state.topFrames, state.pageType);
-    applySourceFrame(bestId);  // sets sourceFrameId + frames + renders
-    updateSourceSelector();    // show/populate dropdown if needed
+    // Activate the first non-skip frame (or first frame if all are skip)
+    const firstActive = state.topFrames.find(f => state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip')
+                     || state.topFrames[0];
+    if (firstActive) activateFrame(firstActive.id);
+    else             renderFrameMapping();
 
-    // Restore any previously saved section states (notes, status, included)
+    // Restore any previously saved section states and frame mappings
     post({ type: 'get-storage', key: sectionsStorageKey() });
+    post({ type: 'get-storage', key: frameMappingsStorageKey() });
     // Trigger file-context check in case all storage-value responses already arrived
     _maybeCheckFileContext();
   }
@@ -1513,6 +1821,17 @@ window.onmessage = event => {
       });
       renderFrames();
     }
+    if (key === frameMappingsStorageKey() && typeof value === 'object') {
+      // Merge saved mappings — saved values win over auto-assigned defaults
+      state.frameMappings = { ...state.frameMappings, ...value };
+      state.mappingsConfirmed = true; // restored from storage — user previously confirmed these
+      // Fill in any frames added since last save
+      autoAssignMappings(state.topFrames);
+      // Re-activate the first non-skip frame with saved mapping
+      const firstMapped = state.topFrames.find(f => state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip');
+      if (firstMapped && firstMapped.id !== state.activeFrameId) activateFrame(firstMapped.id);
+      else renderFrameMapping();
+    }
   }
 };
 
@@ -1533,9 +1852,9 @@ function startSignIn() {
   if (waiting) waiting.classList.add('show');
 
   _signInSessionId = 'pa_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
-  const _fk  = state.fileKey || state.cachedFileKey || '';
-  const _fu  = state.figmaFileUrl || state.manualFigmaUrl || '';
-  const _sid = state.pluginSyncId || '';
+  const _fk  = getEffectiveFigmaFileKey();
+  const _fu  = getEffectiveFigmaFileUrl();
+  const _sid = isStoredFileContextStale() ? '' : (state.pluginSyncId || '');
   const url = `${state.appUrl}?pluginAuth=${_signInSessionId}`
     + (_fk  ? `&fileKey=${encodeURIComponent(_fk)}`  : '')
     + (_fu  ? `&fileUrl=${encodeURIComponent(_fu)}`  : '')
@@ -1665,24 +1984,10 @@ function showProjectPicker(projects) {
 async function selectProject(shareToken) {
   // Clear stale project state BEFORE starting sync polling so the poll
   // doesn't immediately reload the old project via the stored shareToken.
-  if (!shareToken) {
-    state.shareToken    = '';
-    state.projectName   = '';
-    state.projectTheme  = '';
-    state.pluginSyncId  = '';
-    state.sections      = {};
-    state.isDirty       = false;
-    state.hasExported   = false;
-    state.isNewProject  = true;
-    post({ type: 'set-storage', key: 'shareToken',   value: '' });
-    post({ type: 'set-storage', key: 'projectName',  value: '' });
-    post({ type: 'set-storage', key: 'projectTheme', value: '' });
-    post({ type: 'set-storage', key: 'pluginSyncId', value: '' });
-    post({ type: 'set-storage', key: 'hasExported',  value: false });
-    document.getElementById('project-name').value  = '';
-    document.getElementById('project-theme').value = '';
-    renderFrames();
-    updateOpenBtn();
+  const switchingProject = !shareToken || shareToken !== state.shareToken;
+  if (switchingProject) {
+    clearProjectScopedState({ clearManualFigmaUrl: true });
+    state.isNewProject = !shareToken;
   }
 
   // Commit shareToken immediately so export always sends it, even if the
@@ -1707,7 +2012,7 @@ async function selectProject(shareToken) {
 
   // Remind the designer to paste a Figma file URL in Settings if the current file
   // doesn't expose one (typical for draft/unsaved files with no fileKey).
-  const _hasFigmaUrl = !!(state.figmaFileUrl || state.manualFigmaUrl);
+  const _hasFigmaUrl = !!getEffectiveFigmaFileUrl();
   if (!_hasFigmaUrl) {
     setTimeout(() => {
       showToast('⚠ No Figma file URL detected — add it in Settings so frame links work', 5000);
@@ -1754,27 +2059,85 @@ function _applyProjectDoc(projDoc, shareToken) {
     post({ type: 'set-storage', key: 'shareToken', value: shareToken });
   }
 
-  const pagesMap  = projDoc.fields.pages?.mapValue?.fields || {};
-  const pageData  = pagesMap[state.pageType]?.mapValue?.fields;
-  if (!pageData) { updateLinkedBanner(); if (title) showToast(`✓ Loaded: ${title}`); return true; }
+  // ── Restore frame→page mappings ────────────────────────────
+  // Do this BEFORE syncing sections so the section loop uses the correct
+  // page keys. This runs on every project selection, so the user never
+  // has to manually hit Pull just to get their mappings back.
+  const rawMappings = projDoc.fields.frameMappings?.mapValue?.fields || {};
+  const restoredMappings = {};
+  Object.keys(rawMappings).forEach(function(k) {
+    var val = rawMappings[k].stringValue || '';
+    if (val) restoredMappings[k] = val;
+  });
+  if (Object.keys(restoredMappings).length > 0) {
+    state.frameMappings = Object.assign({}, state.frameMappings, restoredMappings);
+    state.mappingsConfirmed = true;
+    saveFrameMappings();
+    // Re-render mapping table with restored values
+    autoAssignMappings(state.topFrames);
+    const firstMapped = state.topFrames.find(function(f) {
+      return state.frameMappings[f.id] && state.frameMappings[f.id] !== 'skip';
+    });
+    if (firstMapped && firstMapped.id !== state.activeFrameId) activateFrame(firstMapped.id);
+    else renderFrameMapping();
+  }
 
-  const sectionsArr = pageData.sections?.arrayValue?.values || [];
-  const frameByName = {};
-  state.frames.forEach(f => { frameByName[f.name.toLowerCase().trim()] = f; });
+  // ── Load custom page tabs from the webapp ──────────────────
+  // Parse the customPages array and add any non-base pages as extra mapping options.
+  const rawCustomPages = projDoc.fields.customPages?.arrayValue?.values || [];
+  const newCustomOpts = rawCustomPages
+    .map(v => ({
+      value: v.mapValue?.fields?.key?.stringValue   || '',
+      label: v.mapValue?.fields?.label?.stringValue || '',
+    }))
+    .filter(o => o.value && !BASE_PAGE_KEYS.has(o.value));
 
+  // Merge preset labels for known keys (e.g. aboutus → About Us)
+  newCustomOpts.forEach(o => { if (!o.label) o.label = PRESET_PAGE_LABELS[o.value] || o.value; });
+
+  // Only re-render if the custom options actually changed
+  const prevKeys = state.customPageOptions.map(o => o.value).join(',');
+  const nextKeys = newCustomOpts.map(o => o.value).join(',');
+  if (prevKeys !== nextKeys) {
+    state.customPageOptions = newCustomOpts;
+    renderFrameMapping(); // rebuild dropdowns with new options
+  }
+
+  // ── Apply sections for ALL mapped frames ──────────────────────
+  // Loop every top-level frame so selecting a project loads notes for
+  // all pages at once, not just whichever frame happens to be active.
+  const pagesMap = projDoc.fields.pages?.mapValue?.fields || {};
   let loaded = 0;
-  sectionsArr.forEach(sVal => {
-    const sf = sVal?.mapValue?.fields;
-    if (!sf) return;
-    const name   = sf.name?.stringValue   || '';
-    const status = sf.status?.stringValue || 'existing';
-    const notes  = sf.notes?.stringValue  || '';
-    const frame  = frameByName[name.toLowerCase().trim()];
-    if (!frame) return;
-    ensureSection(frame.id);
-    state.sections[frame.id].status = status;
-    if (notes) state.sections[frame.id].notes = notes;
-    loaded++;
+
+  state.topFrames.forEach(tf => {
+    const pageKey = state.frameMappings[tf.id];
+    // If no mapping yet, also try 'homepage' for the first/only frame (legacy)
+    const keyToTry = (pageKey && pageKey !== 'skip') ? pageKey
+                   : (state.topFrames.length === 1 ? 'homepage' : null);
+    if (!keyToTry) return;
+
+    const pageData = pagesMap[keyToTry]?.mapValue?.fields;
+    if (!pageData) return;
+
+    const sectionsArr = pageData.sections?.arrayValue?.values || [];
+    const frameByName = {};
+    (tf.sections || []).forEach(f => {
+      frameByName[f.name.toLowerCase().trim()] = f;
+      ensureSection(f.id);
+    });
+
+    sectionsArr.forEach(sVal => {
+      const sf = sVal?.mapValue?.fields;
+      if (!sf) return;
+      const name   = sf.name?.stringValue   || '';
+      const status = sf.status?.stringValue || 'existing';
+      const notes  = sf.notes?.stringValue  || '';
+      const frame  = frameByName[name.toLowerCase().trim()];
+      if (!frame) return;
+      state.sections[frame.id].status = status;
+      if (notes) state.sections[frame.id].notes = notes;
+      loaded++;
+    });
   });
 
   if (loaded > 0) { saveSections(); renderFrames(); }
@@ -1842,21 +2205,7 @@ document.getElementById('modal-new-btn').addEventListener('click', () => {
   state.rootId = state.liveRootId;
   post({ type: 'set-storage', key: 'rootId', value: state.liveRootId });
   // Clear project-specific state (including sync IDs that belong to the old project)
-  state.projectName  = '';  state.projectTheme = '';
-  state.hasExported  = false;
-  state.sections     = {};  state.isDirty      = false;
-  state.manualFigmaUrl = '';
-  state.pluginSyncId = '';  state.shareToken   = '';
-  post({ type: 'set-storage', key: 'projectName',   value: '' });
-  post({ type: 'set-storage', key: 'projectTheme',  value: '' });
-  post({ type: 'set-storage', key: 'hasExported',   value: false });
-  post({ type: 'set-storage', key: 'manualFigmaUrl',value: '' });
-  post({ type: 'set-storage', key: 'pluginSyncId',  value: '' });
-  post({ type: 'set-storage', key: 'shareToken',    value: '' });
-  document.getElementById('project-name').value  = '';
-  document.getElementById('project-theme').value = '';
-  updateOpenBtn();
-  renderFrames();
+  clearProjectScopedState({ clearManualFigmaUrl: true });
   document.getElementById('new-file-modal').classList.remove('show');
   showToast('Starting fresh — sections cleared');
 });

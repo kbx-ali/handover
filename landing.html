@@ -302,9 +302,10 @@
       margin: 12px 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .amock-tab {
-      flex: 1; font-size: 10px; font-weight: 600; color: #9E9EA4;
-      padding: 6px 10px; border-radius: 6px; background: transparent; border: none;
-      text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px;
+      flex: 1; font-size: 9px; font-weight: 600; color: #9E9EA4;
+      padding: 6px 4px; border-radius: 6px; background: transparent; border: none;
+      text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px;
+      white-space: nowrap; overflow: hidden;
     }
     .amock-tab.on { color: #28282B; background: #FFFF00; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .amock-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: #F04848; flex-shrink: 0; }
@@ -327,6 +328,12 @@
       display: flex; align-items: center; gap: 4px;
     }
     .amock-stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .amock-progress-wrap { margin: 6px 0 8px; }
+    .amock-progress-lbl { display:flex; justify-content:space-between; font-size:7.5px; color:var(--dk-text-mute); margin-bottom:4px; }
+    .amock-progress-track { height:4px; border-radius:3px; background:rgba(0,0,0,0.07); display:flex; overflow:hidden; }
+    .amock-progress-track .seg-ex  { background:#94F7A1; }
+    .amock-progress-track .seg-mod { background:#FFFF00; }
+    .amock-progress-track .seg-bes { background:#E591E5; }
     .amock-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
     .amock-card {
       background: #fff; border: 1px solid #E2E2DE; border-radius: 10px;
@@ -496,7 +503,16 @@
     .plug-ui-brand { display: flex; align-items: center; gap: 8px; }
     .plug-ui-brand-name { font-family: 'Domine', serif; font-size: 12.5px; font-weight: 700; color: #fff; line-height: 1.2; }
     .plug-ui-brand-page { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dk-text-mute); }
+    .plug-ui-brand-sub { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dk-text-mute); opacity: 0.6; }
     .plug-ui-hdr-icons { display: flex; gap: 10px; color: var(--dk-text-mute); }
+    .plug-fm-table { display:flex; flex-direction:column; gap:2px; margin-top:2px; }
+    .plug-fm-row { display:flex; align-items:center; gap:6px; padding:3px 6px; border-radius:4px; border-left:2px solid transparent; }
+    .plug-fm-row.pfm-active { background:rgba(148,247,161,0.07); border-left-color:#94F7A1; }
+    .plug-fm-row.pfm-skip { opacity:0.45; }
+    .plug-fm-name { flex:1; font-size:10px; color:var(--dk-text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .plug-fm-row.pfm-active .plug-fm-name { color:#fff; font-weight:600; }
+    .plug-fm-sel { font-size:9px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:2px 6px; color:var(--dk-text-sec); white-space:nowrap; flex-shrink:0; }
+    .plug-fm-row.pfm-active .plug-fm-sel { color:#94F7A1; border-color:rgba(148,247,161,0.3); }
     .plug-ui-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
     .plug-ui-lbl { font-size: 7.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dk-text-mute); margin-bottom: 5px; }
     .plug-ui-input {
@@ -1091,9 +1107,9 @@
       </a>
     </div>
     <div class="hero-dl-row">
-      <a href="https://github.com/kbx-ali/handover/releases/download/v1.1.10/figma-plugin.zip" download class="hero-dl-link">
+      <a href="https://github.com/kbx-ali/handover/releases/latest/download/figma-plugin.zip" download class="hero-dl-link">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8l-3-3m3 3l3-3M4 20h16"/></svg>
-        <span class="version-tag">v1.1.10</span>&thinsp;· Download plugin
+        <span class="version-tag">v1.1.27</span>&thinsp;· Download plugin
       </a>
     </div>
   </div>
@@ -1120,37 +1136,41 @@
               <span class="amock-logo-sub">Handover</span>
             </div>
           </div>
-          <div class="amock-sync"><span class="sync-dot"></span> Saved</div>
+          <div class="amock-sync"><span class="sync-dot"></span> Synced ✓</div>
           <div class="amock-hdr-btns">
             <div class="amock-hdr-btn"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></div>
-            <div class="amock-hdr-btn"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"/><circle cx="12" cy="12" r="3"/></svg></div>
           </div>
         </div>
         <div class="amock-meta">
-          <div class="amock-pill"><span class="amock-pill-lbl">Project</span><span class="amock-pill-val">Project Name here...</span></div>
+          <div class="amock-pill"><span class="amock-pill-lbl">Project</span><span class="amock-pill-val">Project Name</span></div>
           <div class="amock-pill"><span class="amock-pill-lbl">Base Theme</span><span class="amock-pill-val">Dawn</span></div>
-          <div class="amock-loom"><span class="amock-loom-dot"></span>Loom</div>
           <div class="amock-share">
             <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11V3h-8v2h4v2h-2v2h-2v2h-2v2H9v2h2v-2h2v-2h2V9h2V7h2v4zM11 5H3v16h16v-8h-2v6H5V7h6z"/></svg>
             Share Link
           </div>
         </div>
         <div class="amock-tabs-wrap">
-          <button class="amock-tab on"><span class="amock-tab-dot"></span>Homepage <span style="font-size:7px;background:rgba(0,0,0,0.1);border-radius:99px;padding:1px 5px;">8</span></button>
-          <button class="amock-tab">Collection <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">6</span></button>
-          <button class="amock-tab">Product <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">7</span></button>
+          <button class="amock-tab on"><span class="amock-tab-dot"></span>Homepage <span style="font-size:7px;background:rgba(0,0,0,0.1);border-radius:99px;padding:1px 5px;">6</span></button>
+          <button class="amock-tab">Collection Page <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">4</span></button>
+          <button class="amock-tab">Product Page <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">5</span></button>
+          <button class="amock-tab">General <span style="font-size:7px;background:#F2F2EE;border-radius:99px;padding:1px 5px;color:#9E9EA4;">3</span></button>
         </div>
         <div class="amock-body">
-          <div class="amock-stats-bar">
-            <div class="amock-stat"><div class="amock-stat-n">24</div><div class="amock-stat-l">Sections</div></div>
-            <div class="amock-stat"><div class="amock-stat-n">11</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#94F7A1;"></span>Existing</div></div>
-            <div class="amock-stat"><div class="amock-stat-n">7</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#FFFF00;"></span>Modified</div></div>
-            <div class="amock-stat"><div class="amock-stat-n">6</div><div class="amock-stat-l"><span class="amock-stat-dot" style="background:#E591E5;"></span>Bespoke</div></div>
+          <div class="amock-progress-wrap">
+            <div class="amock-progress-lbl"><span>Section breakdown — Homepage · 6 sections</span></div>
+            <div class="amock-progress-track">
+              <div class="seg-ex" style="width:50%"></div>
+              <div class="seg-mod" style="width:33%"></div>
+              <div class="seg-bes" style="width:17%"></div>
+            </div>
           </div>
           <div class="amock-cards">
-            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">1</span><span class="amock-card-name">Navigation</span><span class="badge ex" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Existing</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Nav Bar</span><span class="amock-chip"><span class="amock-chip-dot"></span>Mobile Menu</span></div></div>
-            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">2</span><span class="amock-card-name">Hero Banner</span><span class="badge mod" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Modified</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Hero CTA</span><span class="amock-chip"><span class="amock-chip-dot"></span>Background</span></div></div>
-            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">3</span><span class="amock-card-name">Product Grid</span><span class="badge bes" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Bespoke</span></div><div class="amock-card-bd"><span class="amock-chip"><span class="amock-chip-dot"></span>Card Layout</span><span class="amock-chip"><span class="amock-chip-dot"></span>Filter Bar</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">1</span><span class="amock-card-name">Announcement Bar</span><span class="badge ex" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Existing</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">2</span><span class="amock-card-name">Header / Navigation</span><span class="badge ex" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Existing</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">3</span><span class="amock-card-name">Hero Banner</span><span class="badge bes" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Bespoke</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">4</span><span class="amock-card-name">Featured Products</span><span class="badge mod" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Modified</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">5</span><span class="amock-card-name">Testimonials</span><span class="badge mod" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Modified</span></div></div>
+            <div class="amock-card"><div class="amock-card-hd"><span class="amock-card-drag">&#10495;</span><span class="amock-card-num">6</span><span class="amock-card-name">Footer</span><span class="badge ex" style="font-size:8px;padding:2px 7px;"><span class="badge-dot"></span>Existing</span></div></div>
           </div>
         </div>
       </div>
@@ -1277,7 +1297,7 @@
     <div class="plug-text">
       <div class="section-label lbl-mint" style="margin-bottom:18px;"><span class="lbl-dot"></span>Our Internal Figma Plugin</div>
       <h2 class="plug-heading">Tag Sections.<br>Make Notes.<br>One Click Sync.</h2>
-      <p class="plug-desc">The Figma plugin lives right inside your design file. Select frames from your current page, assign statuses, write notes, and export directly to your live handover page.</p>
+      <p class="plug-desc">The Figma plugin lives right inside your design file. Map your Figma frames to page tabs, tag sections with statuses and notes, and push everything to your live handover page in one click — including ClickUp.</p>
       <ul class="plug-bullets">
         <li class="plug-bullet">
           <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
@@ -1285,15 +1305,19 @@
         </li>
         <li class="plug-bullet">
           <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          Map frames to separate page tabs (Homepage, Decking, etc.)
+        </li>
+        <li class="plug-bullet">
+          <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
           Three-status tagging: Existing, Modified, Bespoke
         </li>
         <li class="plug-bullet">
           <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
-          One-click sync to the live Handover web app
+          Create new page tabs without leaving the plugin
         </li>
         <li class="plug-bullet">
           <span class="plug-bullet-chk"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94F7A1" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
-          Dark &amp; light mode, because we have taste
+          One-click sync to the live Handover web app
         </li>
       </ul>
     </div>
@@ -1305,26 +1329,39 @@
           <svg width="20" height="20" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="16" y="2" width="1" height="1" fill="#FFFF00"/><rect x="17" y="2" width="1" height="1" fill="#FFFF00"/><rect x="18" y="2" width="1" height="1" fill="#FFFF00"/><rect x="6" y="3" width="1" height="1" fill="#FFFF00"/><rect x="7" y="3" width="1" height="1" fill="#FFFF00"/><rect x="8" y="3" width="1" height="1" fill="#FFFF00"/><rect x="16" y="3" width="1" height="1" fill="#FFFF00"/><rect x="17" y="3" width="1" height="1" fill="#FFFF00"/><rect x="18" y="3" width="1" height="1" fill="#FFFF00"/><rect x="6" y="4" width="1" height="1" fill="#FFFF00"/><rect x="7" y="4" width="1" height="1" fill="#FFFF00"/><rect x="8" y="4" width="1" height="1" fill="#FFFF00"/><rect x="16" y="4" width="1" height="1" fill="#FFFF00"/><rect x="17" y="4" width="1" height="1" fill="#FFFF00"/><rect x="18" y="4" width="1" height="1" fill="#FFFF00"/><rect x="6" y="5" width="1" height="1" fill="#FFFF00"/><rect x="7" y="5" width="1" height="1" fill="#FFFF00"/><rect x="8" y="5" width="1" height="1" fill="#FFFF00"/><rect x="15" y="5" width="1" height="1" fill="#FFFF00"/><rect x="16" y="5" width="1" height="1" fill="#FFFF00"/><rect x="17" y="5" width="1" height="1" fill="#FFFF00"/><rect x="3" y="6" width="1" height="1" fill="#FFFF00"/><rect x="4" y="6" width="1" height="1" fill="#FFFF00"/><rect x="5" y="6" width="1" height="1" fill="#FFFF00"/><rect x="15" y="6" width="1" height="1" fill="#FFFF00"/><rect x="16" y="6" width="1" height="1" fill="#FFFF00"/><rect x="17" y="6" width="1" height="1" fill="#FFFF00"/><rect x="3" y="7" width="1" height="1" fill="#FFFF00"/><rect x="4" y="7" width="1" height="1" fill="#FFFF00"/><rect x="5" y="7" width="1" height="1" fill="#FFFF00"/><rect x="15" y="7" width="1" height="1" fill="#FFFF00"/><rect x="16" y="7" width="1" height="1" fill="#FFFF00"/><rect x="17" y="7" width="1" height="1" fill="#FFFF00"/><rect x="3" y="8" width="1" height="1" fill="#FFFF00"/><rect x="4" y="8" width="1" height="1" fill="#FFFF00"/><rect x="5" y="8" width="1" height="1" fill="#FFFF00"/><rect x="14" y="8" width="1" height="1" fill="#FFFF00"/><rect x="15" y="8" width="1" height="1" fill="#FFFF00"/><rect x="16" y="8" width="1" height="1" fill="#FFFF00"/><rect x="0" y="9" width="1" height="1" fill="#FFFF00"/><rect x="1" y="9" width="1" height="1" fill="#FFFF00"/><rect x="2" y="9" width="1" height="1" fill="#FFFF00"/><rect x="14" y="9" width="1" height="1" fill="#FFFF00"/><rect x="15" y="9" width="1" height="1" fill="#FFFF00"/><rect x="16" y="9" width="1" height="1" fill="#FFFF00"/><rect x="0" y="10" width="1" height="1" fill="#FFFF00"/><rect x="1" y="10" width="1" height="1" fill="#FFFF00"/><rect x="2" y="10" width="1" height="1" fill="#FFFF00"/><rect x="14" y="10" width="1" height="1" fill="#FFFF00"/><rect x="15" y="10" width="1" height="1" fill="#FFFF00"/><rect x="16" y="10" width="1" height="1" fill="#FFFF00"/><rect x="19" y="10" width="1" height="1" fill="#FFFF00"/><rect x="20" y="10" width="1" height="1" fill="#FFFF00"/><rect x="21" y="10" width="1" height="1" fill="#FFFF00"/><rect x="0" y="11" width="1" height="1" fill="#FFFF00"/><rect x="1" y="11" width="1" height="1" fill="#FFFF00"/><rect x="2" y="11" width="1" height="1" fill="#FFFF00"/><rect x="13" y="11" width="1" height="1" fill="#FFFF00"/><rect x="14" y="11" width="1" height="1" fill="#FFFF00"/><rect x="15" y="11" width="1" height="1" fill="#FFFF00"/><rect x="19" y="11" width="1" height="1" fill="#FFFF00"/><rect x="20" y="11" width="1" height="1" fill="#FFFF00"/><rect x="21" y="11" width="1" height="1" fill="#FFFF00"/><rect x="3" y="12" width="1" height="1" fill="#FFFF00"/><rect x="4" y="12" width="1" height="1" fill="#FFFF00"/><rect x="5" y="12" width="1" height="1" fill="#FFFF00"/><rect x="13" y="12" width="1" height="1" fill="#FFFF00"/><rect x="14" y="12" width="1" height="1" fill="#FFFF00"/><rect x="15" y="12" width="1" height="1" fill="#FFFF00"/><rect x="19" y="12" width="1" height="1" fill="#FFFF00"/><rect x="20" y="12" width="1" height="1" fill="#FFFF00"/><rect x="21" y="12" width="1" height="1" fill="#FFFF00"/><rect x="3" y="13" width="1" height="1" fill="#FFFF00"/><rect x="4" y="13" width="1" height="1" fill="#FFFF00"/><rect x="5" y="13" width="1" height="1" fill="#FFFF00"/><rect x="13" y="13" width="1" height="1" fill="#FFFF00"/><rect x="14" y="13" width="1" height="1" fill="#FFFF00"/><rect x="15" y="13" width="1" height="1" fill="#FFFF00"/><rect x="22" y="13" width="1" height="1" fill="#FFFF00"/><rect x="23" y="13" width="1" height="1" fill="#FFFF00"/><rect x="24" y="13" width="1" height="1" fill="#FFFF00"/><rect x="3" y="14" width="1" height="1" fill="#FFFF00"/><rect x="4" y="14" width="1" height="1" fill="#FFFF00"/><rect x="5" y="14" width="1" height="1" fill="#FFFF00"/><rect x="12" y="14" width="1" height="1" fill="#FFFF00"/><rect x="13" y="14" width="1" height="1" fill="#FFFF00"/><rect x="14" y="14" width="1" height="1" fill="#FFFF00"/><rect x="22" y="14" width="1" height="1" fill="#FFFF00"/><rect x="23" y="14" width="1" height="1" fill="#FFFF00"/><rect x="24" y="14" width="1" height="1" fill="#FFFF00"/><rect x="6" y="15" width="1" height="1" fill="#FFFF00"/><rect x="7" y="15" width="1" height="1" fill="#FFFF00"/><rect x="8" y="15" width="1" height="1" fill="#FFFF00"/><rect x="12" y="15" width="1" height="1" fill="#FFFF00"/><rect x="13" y="15" width="1" height="1" fill="#FFFF00"/><rect x="14" y="15" width="1" height="1" fill="#FFFF00"/><rect x="22" y="15" width="1" height="1" fill="#FFFF00"/><rect x="23" y="15" width="1" height="1" fill="#FFFF00"/><rect x="24" y="15" width="1" height="1" fill="#FFFF00"/><rect x="6" y="16" width="1" height="1" fill="#FFFF00"/><rect x="7" y="16" width="1" height="1" fill="#FFFF00"/><rect x="8" y="16" width="1" height="1" fill="#FFFF00"/><rect x="12" y="16" width="1" height="1" fill="#FFFF00"/><rect x="13" y="16" width="1" height="1" fill="#FFFF00"/><rect x="14" y="16" width="1" height="1" fill="#FFFF00"/><rect x="25" y="16" width="1" height="1" fill="#FFFF00"/><rect x="26" y="16" width="1" height="1" fill="#FFFF00"/><rect x="27" y="16" width="1" height="1" fill="#FFFF00"/><rect x="6" y="17" width="1" height="1" fill="#FFFF00"/><rect x="7" y="17" width="1" height="1" fill="#FFFF00"/><rect x="8" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="17" width="1" height="1" fill="#FFFF00"/><rect x="12" y="17" width="1" height="1" fill="#FFFF00"/><rect x="13" y="17" width="1" height="1" fill="#FFFF00"/><rect x="25" y="17" width="1" height="1" fill="#FFFF00"/><rect x="26" y="17" width="1" height="1" fill="#FFFF00"/><rect x="27" y="17" width="1" height="1" fill="#FFFF00"/><rect x="11" y="18" width="1" height="1" fill="#FFFF00"/><rect x="12" y="18" width="1" height="1" fill="#FFFF00"/><rect x="13" y="18" width="1" height="1" fill="#FFFF00"/><rect x="25" y="18" width="1" height="1" fill="#FFFF00"/><rect x="26" y="18" width="1" height="1" fill="#FFFF00"/><rect x="27" y="18" width="1" height="1" fill="#FFFF00"/><rect x="11" y="19" width="1" height="1" fill="#FFFF00"/><rect x="12" y="19" width="1" height="1" fill="#FFFF00"/><rect x="13" y="19" width="1" height="1" fill="#FFFF00"/><rect x="22" y="19" width="1" height="1" fill="#FFFF00"/><rect x="23" y="19" width="1" height="1" fill="#FFFF00"/><rect x="24" y="19" width="1" height="1" fill="#FFFF00"/><rect x="10" y="20" width="1" height="1" fill="#FFFF00"/><rect x="11" y="20" width="1" height="1" fill="#FFFF00"/><rect x="12" y="20" width="1" height="1" fill="#FFFF00"/><rect x="22" y="20" width="1" height="1" fill="#FFFF00"/><rect x="23" y="20" width="1" height="1" fill="#FFFF00"/><rect x="24" y="20" width="1" height="1" fill="#FFFF00"/><rect x="10" y="21" width="1" height="1" fill="#FFFF00"/><rect x="11" y="21" width="1" height="1" fill="#FFFF00"/><rect x="12" y="21" width="1" height="1" fill="#FFFF00"/><rect x="22" y="21" width="1" height="1" fill="#FFFF00"/><rect x="23" y="21" width="1" height="1" fill="#FFFF00"/><rect x="24" y="21" width="1" height="1" fill="#FFFF00"/><rect x="10" y="22" width="1" height="1" fill="#FFFF00"/><rect x="11" y="22" width="1" height="1" fill="#FFFF00"/><rect x="12" y="22" width="1" height="1" fill="#FFFF00"/><rect x="19" y="22" width="1" height="1" fill="#FFFF00"/><rect x="20" y="22" width="1" height="1" fill="#FFFF00"/><rect x="21" y="22" width="1" height="1" fill="#FFFF00"/><rect x="9" y="23" width="1" height="1" fill="#FFFF00"/><rect x="10" y="23" width="1" height="1" fill="#FFFF00"/><rect x="11" y="23" width="1" height="1" fill="#FFFF00"/><rect x="19" y="23" width="1" height="1" fill="#FFFF00"/><rect x="20" y="23" width="1" height="1" fill="#FFFF00"/><rect x="21" y="23" width="1" height="1" fill="#FFFF00"/><rect x="9" y="24" width="1" height="1" fill="#FFFF00"/><rect x="10" y="24" width="1" height="1" fill="#FFFF00"/><rect x="11" y="24" width="1" height="1" fill="#FFFF00"/><rect x="19" y="24" width="1" height="1" fill="#FFFF00"/><rect x="20" y="24" width="1" height="1" fill="#FFFF00"/><rect x="21" y="24" width="1" height="1" fill="#FFFF00"/><rect x="9" y="25" width="1" height="1" fill="#FFFF00"/><rect x="10" y="25" width="1" height="1" fill="#FFFF00"/><rect x="11" y="25" width="1" height="1" fill="#FFFF00"/></svg>
           <div>
             <div class="plug-ui-brand-name">Design &rarr; Dev</div>
-            <div class="plug-ui-brand-page">Homepage</div>
+            <span class="plug-ui-brand-sub">Concept V3</span>
           </div>
         </div>
         <div class="plug-ui-hdr-icons">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
       </div>
       <div class="plug-ui-body">
         <div>
           <div class="plug-ui-lbl">Project Name</div>
-          <div class="plug-ui-input">Ruffingtons</div>
+          <div class="plug-ui-input">Composite Cladding &amp; Decking Supplys</div>
         </div>
         <div>
-          <div class="plug-ui-lbl">This Figma page is the&hellip;</div>
-          <div class="plug-ui-select">Homepage <span style="opacity:0.4">&#9660;</span></div>
+          <div class="plug-ui-lbl">Page mapping</div>
+          <div class="plug-fm-table">
+            <div class="plug-fm-row pfm-active">
+              <span class="plug-fm-name">Homepage-Desktop</span>
+              <span class="plug-fm-sel">Homepage</span>
+            </div>
+            <div class="plug-fm-row">
+              <span class="plug-fm-name">Decking-Calculator</span>
+              <span class="plug-fm-sel">Decking</span>
+            </div>
+            <div class="plug-fm-row pfm-skip">
+              <span class="plug-fm-name">Cover</span>
+              <span class="plug-fm-sel">Don't include</span>
+            </div>
+          </div>
         </div>
         <div>
           <div class="plug-ui-frames-hdr">
-            <span class="plug-ui-lbl" style="margin:0">Frames (3)</span>
+            <span class="plug-ui-lbl" style="margin:0">12 Frames · 12 Selected</span>
             <span class="plug-ui-refresh">
               <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
               Refresh
@@ -1443,7 +1480,7 @@
                   <div class="dl-card-meta">Design &rarr; Dev Handover &nbsp;&middot;&nbsp; <span class="version-tag">latest</span></div>
                 </div>
               </div>
-              <a href="https://github.com/kbx-ali/handover/releases/download/v1.1.10/figma-plugin.zip" class="btn-dl" target="_blank" rel="noopener">
+              <a href="https://github.com/kbx-ali/handover/releases/latest/download/figma-plugin.zip" class="btn-dl" target="_blank" rel="noopener">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V8m0 8l-3-3m3 3l3-3M4 20h16"/></svg>
                 Download
               </a>

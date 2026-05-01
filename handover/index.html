@@ -1659,11 +1659,19 @@ async function saveProjectToFirestore(proj) {
 
 async function deleteProjectFromFirestore(id) {
   try {
-    await db.collection('handover_projects').doc(id).delete();
-    // Also clean up public view document if it exists
     const proj = projects.find(p => p.id === id);
+    await db.collection('handover_projects').doc(id).delete();
+    // Also clean up public and plugin sync documents if they exist.
     if (proj?.shareToken) {
       await db.collection('handover_public').doc(proj.shareToken).delete().catch(() => {});
+    }
+    const fkMatch = proj?.generalData?.figmaFileUrl?.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
+    const fk = fkMatch ? fkMatch[1] : null;
+    if (fk) {
+      await db.collection('handover_sync').doc(fk).delete().catch(() => {});
+    }
+    if (proj?.pluginSyncId) {
+      await db.collection('handover_sync').doc(proj.pluginSyncId).delete().catch(() => {});
     }
   } catch(e) {
     console.error('Firestore delete error:', e);
@@ -1737,6 +1745,9 @@ function openProject(id) {
       !customPages.find(p => p.key === activePage)) {
     activePage = 'homepage';
   }
+  // If the saved activePage is a core tab that's now hidden, fall back to homepage
+  const _hiddenOnOpen = new Set(proj.hiddenCorePages || []);
+  if (_hiddenOnOpen.has(activePage)) activePage = 'homepage';
   history.pushState({}, '', '?project=' + id);
   document.body.className = 'proj-view';
   applyProjectMeta();
@@ -1752,7 +1763,7 @@ function closeProject() {
   renderLibrary();
 }
 
-async function newProject() {
+async function newProject(seed = {}) {
   if (!IS_EDITOR) return;
   const id = db.collection('handover_projects').doc().id; // Firestore auto-ID
   const proj = {
@@ -1766,7 +1777,7 @@ async function newProject() {
     createdAt:   Date.now(),
     updatedAt:   Date.now(),
     pages:       defaultPages(),
-    generalData: { figmaFileUrl:'', driveUrl:'', fonts:[], typography:[] }
+    generalData: { figmaFileUrl: seed.figmaFileUrl || '', driveUrl:'', fonts:[], typography:[] }
   };
   projects.unshift(proj);
   await saveProjectToFirestore(proj);
@@ -2200,6 +2211,7 @@ const clickupApi = {
   getFolderlessLists(spaceId) { return this.request('GET', `/space/${spaceId}/list?archived=false`); },
   createTask(listId, data)         { return this.request('POST', `/list/${listId}/task`, data); },
   updateTask(taskId, data)         { return this.request('PUT', `/task/${taskId}`, data); },
+  deleteTask(taskId)               { return this.request('DELETE', `/task/${taskId}`); },
   getListFields(listId)                  { return this.request('GET', `/list/${listId}/field`); },
   setCustomField(taskId, fieldId, value) { return this.request('POST', `/task/${taskId}/field/${fieldId}`, { value }); },
   getTask(taskId)                        { return this.request('GET', `/task/${taskId}`); },
@@ -2247,15 +2259,21 @@ function scheduleSave() {
   saveTimer = setTimeout(async () => {
     const proj = getActiveProject();
     if (!proj) return;
+    // Ensure a shareToken exists so the plugin can always detect this project
+    // on reopen. Without this, handover_sync docs carry shareToken=null until the
+    // user clicks "Share", and the plugin falls through to the new-file modal.
+    if (!proj.shareToken) {
+      proj.shareToken = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+    }
     await saveProjectToFirestore(proj);
-    // Also update the public viewer doc if a shareToken exists
-    if (proj.shareToken) await publishViewerDoc(proj);
+    // Always publish the viewer doc — plugin needs it to load title/theme/sections
+    await publishViewerDoc(proj);
     // Write lightweight sync beacon(s) so the Figma plugin can detect changes.
     // We write by BOTH fileKey and pluginSyncId — the plugin checks whichever it has.
     const syncPayload = {
       updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
       updatedBy:   currentUser?.displayName || currentUser?.email || 'A teammate',
-      shareToken:  proj.shareToken || null
+      shareToken:  proj.shareToken
     };
     const fkMatch = proj.generalData?.figmaFileUrl?.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/);
     const fk = fkMatch ? fkMatch[1] : null;
@@ -2274,12 +2292,14 @@ async function publishViewerDoc(proj) {
   if (!proj.shareToken) return;
   try {
     await db.collection('handover_public').doc(proj.shareToken).set({
-      title:       proj.title,
-      theme:       proj.theme,
-      activePage:  proj.activePage,
-      pages:       proj.pages,
-      generalData: proj.generalData,
-      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+      title:         proj.title,
+      theme:         proj.theme,
+      activePage:    proj.activePage,
+      pages:         proj.pages,
+      customPages:   proj.customPages || [],
+      generalData:   proj.generalData,
+      frameMappings: proj.frameMappings || {},
+      updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch(e) {
     console.error('Publish viewer doc error:', e);
@@ -2923,7 +2943,7 @@ async function pushToClickUp(btn) {
 
   const statusTag = { existing: 'existing section', modified: 'needs new settings', bespoke: 'custom-dev' };
   const projName = proj.title || 'Untitled Project';
-  const pageLabelMap = { homepage: 'HOMEPAGE', collection: 'COLLECTION PAGE', product: 'PRODUCT PAGE' };
+  const pageLabelMap = { homepage: 'HOMEPAGE', collection: 'COLLECTION PAGE', product: 'PRODUCT PAGE', aboutus: 'ABOUT US', contactus: 'CONTACT US' };
 
   // Project Phase + Assignee stored on project
   const phaseFieldId  = proj.clickup?.phaseFieldId  || null;
@@ -2935,6 +2955,9 @@ async function pushToClickUp(btn) {
   if (!proj.clickup) proj.clickup = { pages: {} };
   if (!proj.clickup.pages) proj.clickup.pages = {};
 
+  // All page keys that have sections — includes custom pages
+  const allPageKeys = Object.keys(proj.pages || {}).filter(k => (proj.pages[k]?.sections?.length || 0) > 0);
+
   // Button loading state
   let origHtml;
   if (btn) {
@@ -2943,25 +2966,32 @@ async function pushToClickUp(btn) {
     btn.disabled = true;
   }
 
-  let created = 0, updated = 0, errors = 0;
+  let created = 0, updated = 0, deleted = 0, errors = 0;
 
-  // Collect all section task IDs currently stored — used after the loop to
-  // detect sections that were removed from the app but still exist in ClickUp
-  const knownSectionIds = new Set(
-    ['homepage', 'collection', 'product'].flatMap(k =>
+  // IDs from the PREVIOUS push (stored on proj) — used to detect sections that
+  // have since been deleted from the app and need removing from ClickUp.
+  const prevSectionTaskIds = new Set(proj.clickup.sectionTaskIds || []);
+
+  // IDs that are still active in the current project
+  const currentSectionTaskIds = new Set(
+    allPageKeys.flatMap(k =>
       (proj.pages[k]?.sections || []).map(s => s.clickupTaskId).filter(Boolean)
     )
   );
 
+  // Truly orphaned: existed in the previous push but are no longer in any section
+  const orphanedTaskIds = [...prevSectionTaskIds].filter(id => !currentSectionTaskIds.has(id));
+
   try {
-    for (const key of ['homepage', 'collection', 'product']) {
+    for (const key of allPageKeys) {
       const pg = proj.pages[key];
       if (!pg) continue;
       const sections = pg.sections || [];
       if (sections.length === 0) continue;
 
       // ── Page-level parent task ──
-      const parentName = (pageLabelMap[key] || key.toUpperCase()) + ' - ' + projName;
+      const keyLabel = pageLabelMap[key] || (proj.customPages?.find(p => p.key === key)?.label || key).toUpperCase();
+      const parentName = keyLabel + ' - ' + projName;
       const parentContent = [
         pg.figmaUrl ? 'Figma: ' + pg.figmaUrl : '',
         pg.loomUrl  ? 'Loom: '  + pg.loomUrl  : ''
@@ -3055,44 +3085,50 @@ async function pushToClickUp(btn) {
       }
     }
 
-    // Save ClickUp IDs back to Firestore
+    // ── Delete ClickUp tasks for sections removed from the app ──────
+    for (const taskId of orphanedTaskIds) {
+      try {
+        await clickupApi.deleteTask(taskId);
+        deleted++;
+      } catch (e) {
+        if (e.status === 404) { deleted++; } // already gone — count as deleted
+        else { errors++; console.error('ClickUp delete orphaned task error:', taskId, e); }
+      }
+    }
+
+    // Save ClickUp IDs back to Firestore — including the updated known ID list
     proj.clickup.listId = listId;
     proj.clickup.listLabel = getClickUpListLabel();
     proj.clickup.pushedAt = new Date().toISOString();
+    // Store current section task IDs so the next push can detect future deletions
+    proj.clickup.sectionTaskIds = allPageKeys.flatMap(k =>
+      (proj.pages[k]?.sections || []).map(s => s.clickupTaskId).filter(Boolean)
+    );
     await saveProjectToFirestore(proj);
 
     // ── Critical: sync clickupTaskIds back into the local `pages` copy ──
     // `pages` is a deep-copy made at project open time, separate from proj.pages.
     // Without this, the next autosave would overwrite Firestore with the copy
     // that has no IDs, wiping them and causing duplicates on the next push.
-    ['homepage', 'collection', 'product'].forEach(key => {
+    // Use ID-based matching (not array index) so reordered/added sections stay correct.
+    allPageKeys.forEach(key => {
       if (!pages[key]) return;
-      (pages[key].sections || []).forEach((localSec, i) => {
-        const projSec = (proj.pages[key]?.sections || [])[i];
-        if (projSec?.clickupTaskId) localSec.clickupTaskId = projSec.clickupTaskId;
+      const idMap = {};
+      (proj.pages[key]?.sections || []).forEach(s => {
+        if (s.id && s.clickupTaskId) idMap[s.id] = s.clickupTaskId;
+      });
+      (pages[key].sections || []).forEach(localSec => {
+        if (localSec.id && idMap[localSec.id]) localSec.clickupTaskId = idMap[localSec.id];
       });
     });
-
-    // Detect orphaned ClickUp tasks — IDs that were in the project before
-    // the push but are no longer in any section (section was deleted in the app)
-    const activeSectionIds = new Set(
-      ['homepage', 'collection', 'product'].flatMap(k =>
-        (proj.pages[k]?.sections || []).map(s => s.clickupTaskId).filter(Boolean)
-      )
-    );
-    const orphaned = [...knownSectionIds].filter(id => !activeSectionIds.has(id)).length;
 
     // Success feedback
     const parts = [];
     if (created)  parts.push(created  + ' created');
     if (updated)  parts.push(updated  + ' updated');
+    if (deleted)  parts.push(deleted  + ' removed');
     if (errors)   parts.push(errors   + ' failed');
-    const summary = 'ClickUp: ' + (parts.join(', ') || 'no changes');
-    if (orphaned) {
-      showToast(`${summary} · ${orphaned} removed section${orphaned > 1 ? 's' : ''} — delete from ClickUp manually`, 'info');
-    } else {
-      showToast(summary, errors ? 'error' : 'success');
-    }
+    showToast('ClickUp: ' + (parts.join(', ') || 'no changes'), errors ? 'error' : 'success');
 
   } catch (e) {
     console.error('ClickUp push error:', e);
@@ -3220,7 +3256,8 @@ function render() {
   const total    = secs.length;
   const filtered = activeFilter === 'all' ? secs : secs.filter(s => s.status === activeFilter);
   const pct = k => total ? (c[k]/total*100).toFixed(1) : 0;
-  const def  = PAGE_DEFS[activePage];
+  const _customDef = customPages.find(p => p.key === activePage);
+  const def  = PAGE_DEFS[activePage] || { label: _customDef?.label || activePage, icon: 'pixelarticons:document', sections: [] };
 
   let html = '';
 
@@ -3242,8 +3279,10 @@ function render() {
       ${isCustom && IS_EDITOR ? `<span class="page-tab-remove" onclick="event.stopPropagation();removeCustomPage('${k}')" title="Remove tab">×</span>` : ''}
     </button>`;
   };
-  // Core tabs — always visible
+  // Core tabs — visible unless explicitly hidden by plugin (no sections + not in activeTabs)
+  const _hiddenCore = new Set(getActiveProject()?.hiddenCorePages || []);
   CORE_PAGE_KEYS.forEach(k => {
+    if (_hiddenCore.has(k)) return;
     const d = PAGE_DEFS[k];
     html += renderPageTab(k, d.label, d.icon, false);
   });
@@ -3445,7 +3484,7 @@ function render() {
           <div style="display:flex;flex-direction:column;">
             <div class="field" style="flex:1;display:flex;flex-direction:column;">
               <div class="field-label">Notes for Developer</div>
-              <textarea class="input-text notes-textarea" style="min-height:200px;"${isReadOnly() ? ' readonly' : ` onchange="saveNotesField('${s.id}',this.value)"`}>${esc(s.notes||'')}${s.useThemeSpacing !== false ? '\n\nUse Existing Theme Structure & Spacing' : ''}</textarea>
+              <textarea class="input-text notes-textarea" style="min-height:200px;"${isReadOnly() ? ' readonly' : ` onchange="saveNotesField('${s.id}',this.value)"`}>${esc(s.notes||'')}</textarea>
             </div>
           </div>
         </div>
@@ -3767,10 +3806,88 @@ async function _bootApp() {
     }
   }
 
+  // ── ?pluginAuth=SESSION — write identity so Figma plugin can confirm sign-in ──
+  // Also match this Figma file to an existing project and write the shareToken back
+  // so the plugin loads the correct project immediately on first open.
+  const pluginAuthSession = params.get('pluginAuth');
+  if (pluginAuthSession && currentUser) {
+    const _pFk     = params.get('fileKey') || '';
+    const _pFu     = params.get('fileUrl') ? decodeURIComponent(params.get('fileUrl')) : '';
+    const _pSyncId = params.get('syncId')  || '';
+    const _pExtFk  = url => { const m = url?.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/); return m ? m[1] : null; };
+    const _pMatch  =
+      projects.find(p => _pFk && _pExtFk(p.generalData?.figmaFileUrl) === _pFk)
+      || projects.find(p => _pSyncId && p.pluginSyncId && p.pluginSyncId === _pSyncId);
+    const _pPayload = {
+      email:       currentUser.email,
+      displayName: currentUser.displayName || currentUser.email.split('@')[0]
+    };
+    if (_pMatch) {
+      if (!_pMatch.shareToken) {
+        _pMatch.shareToken = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+        saveProjectToFirestore(_pMatch).catch(() => {});
+        publishViewerDoc(_pMatch).catch(() => {});
+      }
+      _pPayload.shareToken   = _pMatch.shareToken;
+      _pPayload.projectTitle = _pMatch.title || '';
+      // Backfill figmaFileUrl on the project if it was missing
+      if (_pFu && !_pMatch.generalData?.figmaFileUrl) {
+        _pMatch.generalData = _pMatch.generalData || {};
+        _pMatch.generalData.figmaFileUrl = _pFu;
+        saveProjectToFirestore(_pMatch).catch(() => {});
+      }
+      // Await sync doc writes before writing the auth doc — the plugin may poll the
+      // auth doc within milliseconds and immediately look up handover_sync/{fileKey}.
+      // If that doc doesn't exist yet (fire-and-forget race) the plugin falls through
+      // to "no project found" and shows the wrong state.
+      const _pBeacon = { updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: currentUser.displayName || currentUser.email, shareToken: _pMatch.shareToken };
+      await Promise.all([
+        _pFk     ? db.collection('handover_sync').doc(_pFk).set(_pBeacon).catch(() => {})     : Promise.resolve(),
+        _pSyncId ? db.collection('handover_sync').doc(_pSyncId).set(_pBeacon).catch(() => {}) : Promise.resolve()
+      ]);
+    }
+    const _pAllProjs = projects
+      .filter(p => p.shareToken)
+      .map(p => ({ shareToken: p.shareToken, title: p.title || 'Untitled', matchedFile: p === _pMatch }));
+    _pPayload.projectsJson = JSON.stringify(_pAllProjs);
+    console.log('[PluginAuth] fileKey:', _pFk, '| match:', _pMatch ? `"${_pMatch.title}"` : 'none', '| projects:', _pAllProjs.length);
+    await db.collection('handover_sync').doc('plugin_auth_' + pluginAuthSession).set(_pPayload).catch(e => console.warn('[PluginAuth] write failed:', e));
+    showToast('Signed in to Figma plugin — you can return to Figma ✓', 'success');
+  }
+
+  // ── ?createForFile=KEY — link or create a project for this Figma file ──
+  // Checks for an existing project first to avoid duplicates.
+  const _createFk = params.get('createForFile');
+  const _createFu = params.get('fileUrl') ? decodeURIComponent(params.get('fileUrl')) : '';
+  if (_createFk && IS_EDITOR) {
+    const _cfExtFk = url => { const m = url?.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/); return m ? m[1] : null; };
+    const _cfExist = projects.find(p => _cfExtFk(p.generalData?.figmaFileUrl) === _createFk);
+    if (_cfExist) {
+      // Project already linked to this file — just open it
+      openProject(_cfExist.id);
+    } else {
+      // No match — create a new project pre-seeded with the Figma URL
+      await newProject({ figmaFileUrl: _createFu });
+    }
+    return;
+  }
+
   // ── Default: show library ──
   renderLibrary();
   // Offer to migrate any locally-stored projects from before the Firebase upgrade
   await migrateLocalStorageToFirestore();
+  // Backfill handover_sync/{fileKey} for projects that have figmaFileUrl set, ensuring
+  // the plugin can always find them on first open even before any plugin export has run.
+  const _bfExtFk = url => { const m = url?.match(/figma\.com\/(?:design|file)\/([^\/\?#]+)/); return m ? m[1] : null; };
+  projects.forEach(_bfP => {
+    const _bfFk = _bfExtFk(_bfP.generalData?.figmaFileUrl);
+    if (_bfFk && _bfP.shareToken) {
+      db.collection('handover_sync').doc(_bfFk).set(
+        { updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: 'system', shareToken: _bfP.shareToken },
+        { merge: true }
+      ).catch(() => {});
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -4018,7 +4135,11 @@ function renderGeneralTab() {
           <button class="font-type-btn${f.type===t?' active':''}"${isReadOnly() ? ' disabled' : ` onclick="setFontField('${f.id}','type','${t}');render()"`}>${t==='google'?'Google Font':t==='adobe'?'Adobe Font':'Custom Font'}</button>`).join('')}
         </div>
         <button class="font-remove-btn" onclick="removeFont('${f.id}')" title="Remove">✕</button>
-      </div>`;
+      </div>
+      ${f.type === 'adobe' ? `
+      <div class="font-adobe-row" style="grid-column:1 / -1;margin-top:-4px;">
+        <textarea class="input-text" placeholder="Paste Typekit kit ID or embed code (e.g. https://use.typekit.net/xxxxxxx.css) for the developer"${isReadOnly() ? ' readonly' : ` onchange="setFontField('${f.id}','adobeCode',this.value)"`} style="min-height:60px;font-family:monospace;font-size:12px;">${esc(f.adobeCode||'')}</textarea>
+      </div>` : ''}`;
     });
   }
   h += `</div></div>`;
@@ -4081,10 +4202,12 @@ async function handlePluginImport(data) {
 
   const incomingFileKey = extractFileKey(data.figmaFileUrl);
 
-  // Match by Figma file key (primary match now that gistId is gone)
-  const existingProj = incomingFileKey
-    ? projects.find(p => extractFileKey(p.generalData?.figmaFileUrl) === incomingFileKey)
-    : null;
+  // Match priority: shareToken (most reliable, set when user picks from picker) →
+  // fileKey → pluginSyncId. Skip all matching when plugin signals a fresh start.
+  const existingProj = data.isNewProject ? null :
+    ( projects.find(p => data.shareToken && p.shareToken && p.shareToken === data.shareToken)
+      || projects.find(p => incomingFileKey && extractFileKey(p.generalData?.figmaFileUrl) === incomingFileKey)
+      || projects.find(p => data.pluginSyncId && p.pluginSyncId && p.pluginSyncId === data.pluginSyncId) );
 
   console.log(
     '[PluginImport] fileKey:', incomingFileKey,
@@ -4099,62 +4222,72 @@ async function handlePluginImport(data) {
     if (data.activePage)   existingProj.activePage  = data.activePage;
     if (data.figmaFileUrl) existingProj.generalData.figmaFileUrl = data.figmaFileUrl;
     if (data.pluginSyncId) existingProj.pluginSyncId = data.pluginSyncId;
+    // Persist frame→page mappings so the plugin can restore them via Pull on any machine
+    if (data.frameMappings && Object.keys(data.frameMappings).length > 0) {
+      existingProj.frameMappings = data.frameMappings;
+    }
     existingProj.updatedAt = Date.now();
 
-    // ── Auto-enable custom tab if the plugin exported to a non-core page ──
-    const importedPage = data.activePage || 'homepage';
-    if (!CORE_PAGE_KEYS.includes(importedPage)) {
-      if (!Array.isArray(existingProj.customPages)) existingProj.customPages = [];
-      if (!existingProj.customPages.find(p => p.key === importedPage)) {
-        const entry = PRESET_PAGE_KEYS.includes(importedPage)
-          ? { key: importedPage }
-          : { key: importedPage, label: data.title || importedPage };
-        existingProj.customPages.push(entry);
-      }
+    // ── Hide core tabs that the plugin explicitly excluded ──
+    // activeTabs lists every non-skip mapped page key from the plugin export.
+    // Core tabs not in activeTabs (and with no existing sections) are hidden.
+    if (Array.isArray(data.activeTabs)) {
+      const activeSet = new Set(data.activeTabs);
+      existingProj.hiddenCorePages = CORE_PAGE_KEYS.filter(k =>
+        !activeSet.has(k) && !(existingProj.pages[k]?.sections?.length)
+      );
     }
 
-    // ── Merge sections for the imported page only ──
-    const pageKey          = data.activePage || 'homepage';
-    const incomingSections = data.pages?.[pageKey]?.sections || [];
-    const existingSections = existingProj.pages?.[pageKey]?.sections || [];
+    // ── Merge sections for every page included in the export ──
+    if (!Array.isArray(existingProj.customPages)) existingProj.customPages = [];
 
-    if (data.pages?.[pageKey]?.figmaUrl) {
-      existingProj.pages[pageKey].figmaUrl = data.pages[pageKey].figmaUrl;
-    }
+    // Build a label lookup from the plugin's customPageDefs for new tab creation
+    const _importedLabels = {};
+    (data.customPageDefs || []).forEach(d => { if (d.key) _importedLabels[d.key] = d.label; });
 
-    const existingByLink = {};
-    const existingByName = {};
-    existingSections.forEach(s => {
-      if (s.figmaLink) existingByLink[s.figmaLink] = s;
-      if (s.name) existingByName[s.name.toLowerCase().trim()] = s;
-    });
-
-    const matchedIds = new Set();
-    console.log('[PluginImport] incoming sections:', incomingSections.length, '| existing sections:', existingSections.length);
-
-    const mergedSections = incomingSections.map(incoming => {
-      const cleanName = stripSectionPrefix(incoming.name);
-      const existing = existingByLink[incoming.figmaLink]
-                    || existingByName[cleanName.toLowerCase().trim()];
-      if (!existing) {
-        console.log('[PluginImport] NEW section:', cleanName);
-        return { ...incoming, name: cleanName, id: generateId() };
+    for (const pageKey of Object.keys(data.pages || {})) {
+      // Auto-enable custom tab if needed — use the label the plugin supplied
+      if (!CORE_PAGE_KEYS.includes(pageKey) && !existingProj.customPages.find(p => p.key === pageKey)) {
+        const label = _importedLabels[pageKey] || null;
+        existingProj.customPages.push(
+          PRESET_PAGE_KEYS.includes(pageKey) ? { key: pageKey }
+          : label                            ? { key: pageKey, label }
+          :                                    { key: pageKey, label: pageKey }
+        );
       }
-      matchedIds.add(existing.id);
-      return {
-        ...existing,
-        name:      cleanName,
-        figmaLink: incoming.figmaLink || existing.figmaLink,
-        notes:     incoming.notes || existing.notes,
-        status:    incoming.status || existing.status,
-      };
-    });
 
-    existingSections
-      .filter(s => !matchedIds.has(s.id))
-      .forEach(s => mergedSections.push(s));
+      if (!existingProj.pages[pageKey]) existingProj.pages[pageKey] = { loomUrl: '', figmaUrl: '', sections: [] };
+      if (data.pages[pageKey]?.figmaUrl) existingProj.pages[pageKey].figmaUrl = data.pages[pageKey].figmaUrl;
 
-    existingProj.pages[pageKey].sections = mergedSections;
+      const incomingSections = data.pages[pageKey]?.sections || [];
+      const existingSections = existingProj.pages[pageKey].sections || [];
+      const existingByLink = {};
+      const existingByName = {};
+      existingSections.forEach(s => {
+        if (s.figmaLink) existingByLink[s.figmaLink] = s;
+        if (s.name) existingByName[s.name.toLowerCase().trim()] = s;
+      });
+
+      const matchedIds = new Set();
+      console.log('[PluginImport] page:', pageKey, '| incoming:', incomingSections.length, '| existing:', existingSections.length);
+
+      const mergedSections = incomingSections.map(incoming => {
+        const cleanName = stripSectionPrefix(incoming.name);
+        const existing  = existingByLink[incoming.figmaLink]
+                       || existingByName[cleanName.toLowerCase().trim()];
+        if (!existing) return { ...incoming, name: cleanName, id: generateId() };
+        matchedIds.add(existing.id);
+        return {
+          ...existing,
+          name:      cleanName,
+          figmaLink: incoming.figmaLink || existing.figmaLink,
+          notes:     incoming.notes     || existing.notes,
+          status:    incoming.status    || existing.status,
+        };
+      });
+      existingSections.filter(s => !matchedIds.has(s.id)).forEach(s => mergedSections.push(s));
+      existingProj.pages[pageKey].sections = mergedSections;
+    }
 
     // Auto-generate share token so sync works immediately
     if (!existingProj.shareToken) {
@@ -4194,6 +4327,14 @@ async function handlePluginImport(data) {
     createdAt:   Date.now(),
     updatedAt:   Date.now(),
     pages:       data.pages  || defaultPages(),
+    // Build customPages from any non-core keys in the export that have a label
+    customPages: (data.customPageDefs || []),
+    // Hide core tabs not included in the export
+    hiddenCorePages: Array.isArray(data.activeTabs)
+      ? CORE_PAGE_KEYS.filter(k => !data.activeTabs.includes(k))
+      : [],
+    // Persist frame→page mappings so the plugin can restore them via Pull on any machine
+    frameMappings: data.frameMappings || {},
     generalData: {
       figmaFileUrl: data.figmaFileUrl || '',
       fonts:        [],

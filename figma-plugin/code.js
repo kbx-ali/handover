@@ -32,13 +32,17 @@ function findPrefixedSections(node, fileKey, pageName) {
           ? `https://www.figma.com/design/${fileKey}/${encodeURIComponent(pageName)}?node-id=${child.id.replace(':', '-')}`
           : ''
       });
+      // Treat // nodes as atomic — don't recurse into them. This prevents
+      // internal sub-frames inside an auto-layout // section from polluting
+      // the flat sections list, and is consistent with COMPONENT behaviour.
+      continue;
     }
     // Don't recurse into component instances or component definitions —
     // they are atomic sections; their internal frames are not user-facing
     // page sections and would pollute results if picked up.
     if (child.type === 'INSTANCE' || child.type === 'COMPONENT') continue;
-    // Recurse into frames/groups/sections — a // frame may contain further
-    // // frames, and Figma Sections may wrap // frames without being named.
+    // Recurse into frames/groups/Figma Sections — they may wrap // frames
+    // without having a // prefix themselves.
     results.push(...findPrefixedSections(child, fileKey, pageName));
   }
   return results;
@@ -57,11 +61,17 @@ function buildPageData() {
       : ''
   });
 
-  const topFrames = page.children
+  const rawTopFrames = page.children
     // Include both FRAME and SECTION types — Figma Sections are top-level
     // canvas organisers that may contain the user's // frames.
     .filter(n => (n.type === 'FRAME' || n.type === 'SECTION') && n.visible !== false)
     .map(n => {
+      // If the top-level frame itself carries the // prefix, treat it directly
+      // as a section (don't look inside it for sub-sections).
+      if (n.name.startsWith(SECTION_PREFIX)) {
+        return { id: n.id, name: n.name, childCount: 0, sections: [toSection(n)], _canvasSection: true };
+      }
+
       // 1. Look for explicitly prefixed sections anywhere in the subtree
       const prefixed = findPrefixedSections(n, fileKey, pageName);
       if (prefixed.length > 0) {
@@ -79,6 +89,27 @@ function buildPageData() {
         sections:   childFrames.length > 0 ? childFrames.map(toSection) : [toSection(n)]
       };
     });
+
+  // When multiple top-level frames are // sections (flat canvas layout),
+  // merge them into one virtual container so all sections are visible together.
+  const canvasSections = rawTopFrames.filter(f => f._canvasSection);
+  let topFrames;
+  if (canvasSections.length > 1) {
+    const merged = {
+      id:         '__canvas__',
+      name:       pageName,
+      childCount: canvasSections.length,
+      sections:   canvasSections.map(f => f.sections[0])
+    };
+    const rest = rawTopFrames.filter(f => !f._canvasSection);
+    topFrames = [merged, ...rest];
+  } else {
+    topFrames = rawTopFrames.map(f => {
+      var out = Object.assign({}, f);
+      delete out._canvasSection;
+      return out;
+    });
+  }
 
   return {
     pageName,
